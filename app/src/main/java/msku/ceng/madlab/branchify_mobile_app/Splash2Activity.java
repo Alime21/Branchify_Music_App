@@ -6,12 +6,21 @@ import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.tabs.TabLayout;
+
 public class Splash2Activity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash2);
+
+        // Set the second tab as selected
+        TabLayout tabLayout = findViewById(R.id.tabLayout);
+        TabLayout.Tab tab = tabLayout.getTabAt(1);
+        if (tab != null) {
+            tab.select();
+        }
 
         ImageView nextArrow = findViewById(R.id.nextArrow2);
 

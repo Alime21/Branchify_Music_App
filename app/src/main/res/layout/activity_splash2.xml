@@ -42,17 +42,16 @@
         app:layout_constraintWidth_percent="0.7" />
 
     <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="32dp"
         app:tabBackground="@drawable/tab_selector"
         app:tabIndicatorHeight="0dp"
         app:tabGravity="center"
-
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:ignore="MissingConstraints">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
@@ -68,12 +67,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/arrow_forward"
+        android:color="#4c4c4c"
         android:padding="8dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="16dp"
         android:contentDescription="forward arrow"
 
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="@+id/tabLayout"
+        app:layout_constraintTop_toTopOf="@+id/tabLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
