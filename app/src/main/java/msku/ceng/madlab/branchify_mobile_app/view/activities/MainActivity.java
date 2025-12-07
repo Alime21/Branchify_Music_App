@@ -21,18 +21,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main); // İçinde BottomNav ve FrameLayout olan XML
+        setContentView(R.layout.activity_main); // XML containing BottomNav and FrameLayout
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        // 1. Uygulama ilk açıldığında varsayılan olarak HomeFragment (Playlists) görünsün
+        // 1.HomeFragment (Playlists) will appear by default when the app is first opened
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new HomeFragment())
                     .commit();
         }
 
-        // 2. Alt menüye tıklanınca ne olacağını belirleyen kod
+        // 2. Code that determines what happens when a submenu is clicked
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new SettingsFragment();
             }
 
-            // Eğer geçerli bir fragment seçildiyse ekrana yükle
+            // If a valid fragment is selected, load it onto the screen
             if (selectedFragment != null) {
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, selectedFragment)
