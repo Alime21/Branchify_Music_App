@@ -1,4 +1,4 @@
-package msku.ceng.madlab.branchify_mobile_app;
+package msku.ceng.madlab.branchify_mobile_app.view.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.widget.ImageView;
 
 import com.google.android.material.tabs.TabLayout;
+
+import msku.ceng.madlab.branchify_mobile_app.R;
 
 public class Splash1Activity extends AppCompatActivity {
 

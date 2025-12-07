@@ -12,13 +12,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Branchify_Mobile_app">
         <activity
-            android:name=".Splash2Activity"
+            android:name=".view.activities.Splash2Activity"
             android:exported="false" />
         <activity
-            android:name=".Splash1Activity"
+            android:name=".view.activities.Splash1Activity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".view.activities.WelcomeActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

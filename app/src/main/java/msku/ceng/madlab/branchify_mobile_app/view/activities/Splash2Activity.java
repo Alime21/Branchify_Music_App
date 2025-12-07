@@ -1,4 +1,4 @@
-package msku.ceng.madlab.branchify_mobile_app;
+package msku.ceng.madlab.branchify_mobile_app.view.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,6 +7,8 @@ import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.tabs.TabLayout;
+
+import msku.ceng.madlab.branchify_mobile_app.R;
 
 public class Splash2Activity extends AppCompatActivity {
 
@@ -26,7 +28,7 @@ public class Splash2Activity extends AppCompatActivity {
 
         // when you click arrow it will go to MainActivity
         nextArrow.setOnClickListener(v -> {
-            Intent intent = new Intent(Splash2Activity.this, MainActivity.class);
+            Intent intent = new Intent(Splash2Activity.this, msku.ceng.madlab.branchify_mobile_app.view.activities.MainActivity.class);
             startActivity(intent);
             finish();
         });

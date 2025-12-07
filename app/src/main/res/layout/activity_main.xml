@@ -3,43 +3,32 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/main_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#aec597"
-    tools:context=".MainActivity">
+    tools:context=".view.activities.MainActivity">
 
-    <ImageView
-        android:id="@+id/Logo_view"
-        android:layout_width="272dp"
-        android:layout_height="278dp"
-        app:srcCompat="@mipmap/ic_launcher_foreground"
-        android:contentDescription="Uygulama Logosu"
-
-        app:layout_constraintStart_toStartOf="parent"
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/app_name"
-
-        android:layout_marginTop="100dp"
-        android:layout_marginBottom="16dp"
-
-        app:layout_constraintVertical_chainStyle="packed" />
-    <TextView
-        android:id="@+id/app_name"
-        android:layout_width="wrap_content"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="32sp"
-        android:fontFamily="@font/rubik_mono_one"
-        android:text="Branchify"
-        android:textColor="#4c4c4c"
-
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-
-        app:layout_constraintTop_toBottomOf="@id/Logo_view"
+        android:background="#B4C698"
+        app:itemIconTint="#2C3E50"
+        app:itemTextColor="#2C3E50"
+        app:menu="@menu/bottom_nav_menu"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-        android:layout_marginBottom="50dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

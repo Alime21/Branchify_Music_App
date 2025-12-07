@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#aec597"
-    tools:context=".Splash1Activity">
+    tools:context=".view.activities.Splash1Activity">
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
