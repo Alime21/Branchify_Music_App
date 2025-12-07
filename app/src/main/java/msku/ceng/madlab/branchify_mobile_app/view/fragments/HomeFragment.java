@@ -13,9 +13,6 @@ public class HomeFragment extends Fragment{
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // DİKKAT: Her fragment için kendi layout dosyasını buraya yazacağız.
-        // Şimdilik hepsi için 'fragment_home' kullanabilirsin veya
-        // 'fragment_favorites', 'fragment_tree' diye xml dosyaları oluşturup onları yazabilirsin.
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 }

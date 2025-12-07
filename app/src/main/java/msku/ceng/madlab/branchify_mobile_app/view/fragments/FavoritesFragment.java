@@ -13,7 +13,7 @@ public class FavoritesFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Eğer 'fragment_favorites' kırmızı yanarsa 2. adıma bak
+
         return inflater.inflate(R.layout.fragment_favorites, container, false);
     }
 }
