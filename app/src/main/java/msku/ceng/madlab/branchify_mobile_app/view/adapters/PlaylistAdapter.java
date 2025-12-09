@@ -1,4 +1,4 @@
-package msku.ceng.madlab.branchify_mobile.view.adapters;
+package msku.ceng.madlab.branchify_mobile_app.view.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,7 +21,6 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Hazırladığımız grid kutu tasarımını bağlıyoruz
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_playlist_grid, parent, false);
         return new ViewHolder(view);

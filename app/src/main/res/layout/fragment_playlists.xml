@@ -12,6 +12,14 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp">
 
+        <ImageView
+            android:id="@+id/btnBackPlaylists"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/arrow_back"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"/>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

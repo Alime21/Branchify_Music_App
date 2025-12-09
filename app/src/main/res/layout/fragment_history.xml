@@ -6,15 +6,28 @@
     android:background="#C8D6AF"
     android:padding="16dp">
 
-    <TextView
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="History"
-        android:textAlignment="center"
-        android:textColor="#4A8C88"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="16dp">
+
+        <ImageView
+            android:id="@+id/btnBackHistory"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/arrow_back"
+            android:layout_centerVertical="true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="History"
+            android:textAlignment="center"
+            android:textColor="#4A8C88"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_centerInParent="true"/>
+    </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerHistory"
