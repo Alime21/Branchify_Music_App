@@ -29,7 +29,6 @@ public class SettingsFragment extends Fragment{
                     bottomNav.setSelectedItemId(R.id.nav_playlists);
                 }
             }
-
         });
         // notifications
         TextView btnNotifications = view.findViewById(R.id.optionNotifications);

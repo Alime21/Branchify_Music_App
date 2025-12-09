@@ -1,18 +1,18 @@
 package msku.ceng.madlab.branchify_mobile_app.view.activities;
 
+import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import android.os.Bundle;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import msku.ceng.madlab.branchify_mobile_app.R;
-
-// Fragment'ları import ediyoruz (Paket yoluna dikkat et)
-import msku.ceng.madlab.branchify_mobile_app.view.fragments.HomeFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.FavoritesFragment;
-import msku.ceng.madlab.branchify_mobile_app.view.fragments.TreeFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.HistoryFragment;
+import msku.ceng.madlab.branchify_mobile_app.view.fragments.HomeFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.SettingsFragment;
+import msku.ceng.madlab.branchify_mobile_app.view.fragments.TreeFragment;
 
 public class MainActivity extends AppCompatActivity {
 

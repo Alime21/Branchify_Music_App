@@ -22,7 +22,6 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // History için yaptığımız satır tasarımını burada da kullanıyoruz (Aynı görünüyorlar)
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_history_song, parent, false);
         return new ViewHolder(view);

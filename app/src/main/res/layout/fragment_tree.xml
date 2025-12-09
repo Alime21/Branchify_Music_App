@@ -1,6 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#C8D6AF"
+    android:fillViewport="true">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:padding="50dp">
+
+            <TextView
+                android:id="@+id/treeTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="My Tree"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#2952FF"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginBottom="30dp"/>
+
+            <TextView
+                android:id="@+id/nodeRoot"
+                android:layout_width="120dp"
+                android:layout_height="50dp"
+                android:text="All Songs"
+                android:gravity="center"
+                android:background="@drawable/bg_tree_node"
+                android:textColor="#2C3E50"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <View
+                android:id="@+id/lineMain"
+                android:layout_width="50dp"
+                android:layout_height="2dp"
+                android:background="#4A8C88"
+                app:layout_constraintStart_toEndOf="@id/nodeRoot"
+                app:layout_constraintTop_toTopOf="@id/nodeRoot"
+                app:layout_constraintBottom_toBottomOf="@id/nodeRoot"/>
+
+            <View
+                android:id="@+id/lineVertical"
+                android:layout_width="2dp"
+                android:layout_height="250dp"
+                android:background="#4A8C88"
+                app:layout_constraintStart_toEndOf="@id/lineMain"
+                app:layout_constraintTop_toTopOf="@id/nodePop"
+                app:layout_constraintBottom_toBottomOf="@id/nodeHiphop"/>
+
+            <View
+                android:id="@+id/lineJazz"
+                android:layout_width="30dp"
+                android:layout_height="2dp"
+                android:background="#4A8C88"
+                app:layout_constraintStart_toEndOf="@id/lineVertical"
+                app:layout_constraintTop_toTopOf="@id/nodeRoot"
+                app:layout_constraintBottom_toBottomOf="@id/nodeRoot"/>
+
+            <TextView
+                android:id="@+id/nodeJazz"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:text="Jazz"
+                android:gravity="center"
+                android:background="@drawable/bg_tree_node"
+                android:textColor="#2C3E50"
+                app:layout_constraintStart_toEndOf="@id/lineJazz"
+                app:layout_constraintTop_toTopOf="@id/lineJazz"
+                app:layout_constraintBottom_toBottomOf="@id/lineJazz"/>
+
+            <View
+                android:id="@+id/linePop"
+                android:layout_width="30dp"
+                android:layout_height="2dp"
+                android:background="#4A8C88"
+                android:layout_marginBottom="100dp"
+                app:layout_constraintStart_toEndOf="@id/lineVertical"
+                app:layout_constraintBottom_toTopOf="@id/lineJazz"/>
+
+            <TextView
+                android:id="@+id/nodePop"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:text="Pop"
+                android:gravity="center"
+                android:background="@drawable/bg_tree_node"
+                android:textColor="#2C3E50"
+                app:layout_constraintStart_toEndOf="@id/linePop"
+                app:layout_constraintTop_toTopOf="@id/linePop"
+                app:layout_constraintBottom_toBottomOf="@id/linePop"/>
+
+            <View
+                android:id="@+id/lineHiphop"
+                android:layout_width="30dp"
+                android:layout_height="2dp"
+                android:background="#4A8C88"
+                android:layout_marginTop="100dp"
+                app:layout_constraintStart_toEndOf="@id/lineVertical"
+                app:layout_constraintTop_toBottomOf="@id/lineJazz"/>
+
+            <TextView
+                android:id="@+id/nodeHiphop"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:text="Hiphop"
+                android:gravity="center"
+                android:background="@drawable/bg_tree_node"
+                android:textColor="#2C3E50"
+                app:layout_constraintStart_toEndOf="@id/lineHiphop"
+                app:layout_constraintTop_toTopOf="@id/lineHiphop"
+                app:layout_constraintBottom_toBottomOf="@id/lineHiphop"/>
+
+            <TextView
+                android:id="@+id/btnAddPop"
+                android:layout_width="60dp"
+                android:layout_height="30dp"
+                android:text="Add"
+                android:textSize="10sp"
+                android:gravity="center"
+                android:background="@drawable/bg_tree_node"
+                android:layout_marginStart="20dp"
+                app:layout_constraintStart_toEndOf="@id/nodePop"
+                app:layout_constraintTop_toTopOf="@id/nodePop"
+                app:layout_constraintBottom_toBottomOf="@id/nodePop"/>
+            <View
+                android:layout_width="20dp"
+                android:layout_height="2dp"
+                android:background="#4A8C88"
+                app:layout_constraintStart_toEndOf="@id/nodePop"
+                app:layout_constraintEnd_toStartOf="@id/btnAddPop"
+                app:layout_constraintTop_toTopOf="@id/nodePop"
+                app:layout_constraintBottom_toBottomOf="@id/nodePop"/>
+
+
+            <TextView
+                android:id="@+id/btnAddHiphop"
+                android:layout_width="60dp"
+                android:layout_height="30dp"
+                android:text="Add"
+                android:textSize="10sp"
+                android:gravity="center"
+                android:background="@drawable/bg_tree_node"
+                android:layout_marginStart="20dp"
+                app:layout_constraintStart_toEndOf="@id/nodeHiphop"
+                app:layout_constraintTop_toTopOf="@id/nodeHiphop"
+                app:layout_constraintBottom_toBottomOf="@id/nodeHiphop"/>
+            <View
+                android:layout_width="20dp"
+                android:layout_height="2dp"
+                android:background="#4A8C88"
+                app:layout_constraintStart_toEndOf="@id/nodeHiphop"
+                app:layout_constraintEnd_toStartOf="@id/btnAddHiphop"
+                app:layout_constraintTop_toTopOf="@id/nodeHiphop"
+                app:layout_constraintBottom_toBottomOf="@id/nodeHiphop"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </HorizontalScrollView>
+</ScrollView>
