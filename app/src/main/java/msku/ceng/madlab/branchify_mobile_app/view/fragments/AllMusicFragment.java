@@ -16,28 +16,27 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import msku.ceng.madlab.branchify_mobile_app.R;
-import msku.ceng.madlab.branchify_mobile_app.contract.FavoritesContract;
+import msku.ceng.madlab.branchify_mobile_app.contract.AllMusicContract;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
-import msku.ceng.madlab.branchify_mobile_app.presenter.FavoritesPresenter;
-import msku.ceng.madlab.branchify_mobile_app.view.adapters.FavoritesAdapter;
+import msku.ceng.madlab.branchify_mobile_app.presenter.AllMusicPresenter;
+import msku.ceng.madlab.branchify_mobile_app.view.adapters.AllMusicAdapter;
 
+public class AllMusicFragment extends Fragment implements AllMusicContract.View {
 
-public class FavoritesFragment extends Fragment implements FavoritesContract.View {
-
-    private FavoritesPresenter presenter;
+    private AllMusicPresenter presenter;
     private RecyclerView recyclerView;
-    private FavoritesAdapter adapter;
+    private AllMusicAdapter adapter;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_favorites, container, false);
+        View view = inflater.inflate(R.layout.fragment_all_music, container, false);
 
-        // 1. RecyclerView
-        recyclerView = view.findViewById(R.id.recyclerFavorites);
+        // RecyclerView
+        recyclerView = view.findViewById(R.id.recyclerAllMusic);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // 2.Back button
+        // Back button
         ImageView btnBack = view.findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> {
             if (getParentFragmentManager().getBackStackEntryCount() > 0) {
@@ -45,9 +44,8 @@ public class FavoritesFragment extends Fragment implements FavoritesContract.Vie
             }
         });
 
-        // 3. start MVP called the Presenter
-        presenter = new FavoritesPresenter(this, requireContext());
-        presenter.loadFavorites();
+        presenter = new AllMusicPresenter(this, requireContext());
+        presenter.loadAllMusic();
 
         return view;
     }
@@ -55,8 +53,8 @@ public class FavoritesFragment extends Fragment implements FavoritesContract.Vie
     //MVP Methods
 
     @Override
-    public void showFavoritesList(List<Song> songs) {
-        adapter = new FavoritesAdapter(songs);
+    public void showAllMusicList(List<Song> songs) {
+        adapter = new AllMusicAdapter(songs);
         recyclerView.setAdapter(adapter);
     }
 

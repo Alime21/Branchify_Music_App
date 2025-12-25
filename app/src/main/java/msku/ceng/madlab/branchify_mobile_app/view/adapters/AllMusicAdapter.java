@@ -14,12 +14,12 @@ import java.util.concurrent.TimeUnit;
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 
-public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.ViewHolder> {
+public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHolder> {
 
-    private List<Song> favoritesList;
+    private List<Song> allMusicList;
 
-    public FavoritesAdapter(List<Song> favoritesList) {
-        this.favoritesList = favoritesList;
+    public AllMusicAdapter(List<Song> allMusicList) {
+        this.allMusicList = allMusicList;
     }
 
     @NonNull
@@ -32,7 +32,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Song song = favoritesList.get(position);
+        Song song = allMusicList.get(position);
         holder.textTitle.setText(song.getTitle());
         holder.textArtist.setText(song.getArtist());
         holder.textDuration.setText(formatDuration(song.getDuration()));
@@ -40,7 +40,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
 
     @Override
     public int getItemCount() {
-        return favoritesList.size();
+        return allMusicList.size();
     }
 
     private String formatDuration(String durationStr) {
