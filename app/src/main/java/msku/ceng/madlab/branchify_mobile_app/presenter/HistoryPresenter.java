@@ -1,4 +1,4 @@
-package msku.ceng.madlab.branchify_mobile.presenter;
+package msku.ceng.madlab.branchify_mobile_app.presenter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,6 @@ public class HistoryPresenter implements HistoryContract.Presenter {
 
     private HistoryContract.View view;
 
-    // connect the View (Fragment)
     public HistoryPresenter(HistoryContract.View view) {
         this.view = view;
     }
@@ -18,13 +17,12 @@ public class HistoryPresenter implements HistoryContract.Presenter {
     public void loadHistory() {
         view.showLoading();
 
-        // dummy dataset
+        // dummy dataset using the correct constructor
         List<Song> historyList = new ArrayList<>();
-        historyList.add(new Song("Lorem ipsum", "Sanatçı 1", "1:35"));
-        historyList.add(new Song("Branchify Song", "Bizim Grup", "3:10"));
-        historyList.add(new Song("MVP Rules", "Coder", "2:45"));
+        historyList.add(new Song(1L, "Lorem ipsum", "Sanatçı 1", "95000"));
+        historyList.add(new Song(2L, "Branchify Song", "Bizim Grup", "190000"));
+        historyList.add(new Song(3L, "MVP Rules", "Coder", "165000"));
 
-        // if data is ready send view
         if (historyList.isEmpty()) {
             view.showError("not found");
         } else {

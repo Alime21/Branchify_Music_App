@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 import msku.ceng.madlab.branchify_mobile_app.model.data.FirestoreManager;
+import msku.ceng.madlab.branchify_mobile_app.view.activities.MainActivity;
 
 public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.ViewHolder> {
 
@@ -31,7 +32,6 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
     public FavoritesAdapter(List<Song> favoritesList) {
         this.favoritesList = favoritesList;
         this.firestoreManager = new FirestoreManager();
-        // Initially, all songs in this adapter are considered favorites.
         for (Song song : favoritesList) {
             favoriteSongTitles.add(song.getTitle());
         }
@@ -54,18 +54,22 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
 
         updateHeartIcon(holder, song, false);
 
+        holder.itemView.setOnClickListener(v -> {
+            if (v.getContext() instanceof MainActivity) {
+                ((MainActivity) v.getContext()).playSong(song);
+            }
+        });
+
         holder.iconHeart.setOnClickListener(v -> {
             boolean isCurrentlyFavorite = favoriteSongTitles.contains(song.getTitle());
             if (isCurrentlyFavorite) {
-                // It was a favorite, so remove it
                 firestoreManager.removeFavorite(song);
                 favoriteSongTitles.remove(song.getTitle());
                 updateHeartIcon(holder, song, false);
             } else {
-                // It was not a favorite (in this session), so add it back
                 firestoreManager.addFavorite(song);
                 favoriteSongTitles.add(song.getTitle());
-                updateHeartIcon(holder, song, true); // Animate when re-favoriting
+                updateHeartIcon(holder, song, true);
             }
         });
     }

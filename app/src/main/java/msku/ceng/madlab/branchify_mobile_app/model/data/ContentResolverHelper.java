@@ -71,7 +71,7 @@ public class ContentResolverHelper {
                     String data = cursor.getString(dataColumn);
 
                     // Create a Song object and add it to the list
-                    audioFiles.add(new Song(title, artist, String.valueOf(duration)));
+                    audioFiles.add(new Song(id, title, artist, String.valueOf(duration)));
                 } while (cursor.moveToNext());
             } else {
                 Log.d(TAG, "Cursor is empty. No audio files found.");

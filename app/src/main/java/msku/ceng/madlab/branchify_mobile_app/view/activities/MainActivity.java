@@ -5,11 +5,14 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
@@ -17,11 +20,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import java.util.List;
-
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 import msku.ceng.madlab.branchify_mobile_app.model.data.ContentResolverHelper;
+import msku.ceng.madlab.branchify_mobile_app.player.MusicPlayerManager;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.AllMusicFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.FavoritesFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.HistoryFragment;
@@ -36,6 +38,12 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
+    // UI for Now Playing Bar
+    private View nowPlayingBar; // Changed to View to be more generic
+    private TextView textNowPlayingTitle;
+    private ImageButton buttonPlayPause;
+    private MusicPlayerManager musicPlayerManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,23 +51,43 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         bottomNavigationView = findViewById(R.id.bottom_navigation);
+        
+        // Correctly find the included layout and its children
+        nowPlayingBar = findViewById(R.id.now_playing_bar_include);
+        textNowPlayingTitle = nowPlayingBar.findViewById(R.id.textNowPlayingTitle);
+        buttonPlayPause = nowPlayingBar.findViewById(R.id.buttonPlayPause);
+        musicPlayerManager = MusicPlayerManager.getInstance();
 
         mAuthListener = firebaseAuth -> {
             FirebaseUser user = firebaseAuth.getCurrentUser();
             if (user != null) {
-                // User is signed in, setup the app
                 Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                 setupApp();
             } else {
-                // User is signed out, attempt to sign in anonymously
                 Log.d(TAG, "onAuthStateChanged:signed_out");
                 signInAnonymously();
             }
         };
+
+        buttonPlayPause.setOnClickListener(v -> {
+            if (musicPlayerManager.isPlaying()) {
+                musicPlayerManager.pause();
+                buttonPlayPause.setImageResource(R.drawable.ic_play);
+            } else {
+                musicPlayerManager.resume();
+                buttonPlayPause.setImageResource(R.drawable.ic_pause);
+            }
+        });
+    }
+    
+    public void playSong(Song song) {
+        musicPlayerManager.play(this, song);
+        textNowPlayingTitle.setText(song.getTitle());
+        nowPlayingBar.setVisibility(View.VISIBLE);
+        buttonPlayPause.setImageResource(R.drawable.ic_pause);
     }
 
     private void setupApp() {
-        // Make the navigation visible and set it up
         bottomNavigationView.setVisibility(View.VISIBLE);
 
         if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
@@ -94,7 +122,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        // Now that the user is authenticated, we can check for permissions
         checkPermissionsAndLoadFiles();
     }
 
@@ -116,8 +143,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadAudioFiles() {
-        // This method now only exists to trigger the initial scan.
-        // The data isn't passed directly anymore.
         new ContentResolverHelper(this).getAudioFiles();
     }
     
@@ -142,5 +167,11 @@ public class MainActivity extends AppCompatActivity {
         if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        musicPlayerManager.release();
     }
 }

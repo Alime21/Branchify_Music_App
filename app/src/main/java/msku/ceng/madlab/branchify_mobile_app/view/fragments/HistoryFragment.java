@@ -19,7 +19,7 @@ import java.util.List;
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.contract.HistoryContract;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
-import msku.ceng.madlab.branchify_mobile.presenter.HistoryPresenter;
+import msku.ceng.madlab.branchify_mobile_app.presenter.HistoryPresenter;
 import msku.ceng.madlab.branchify_mobile_app.view.adapters.HistoryAdapter;
 
 public class HistoryFragment extends Fragment implements HistoryContract.View {
@@ -36,22 +36,17 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
         recyclerView = view.findViewById(R.id.recyclerHistory);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // 2. Back button
         ImageView btnBack = view.findViewById(R.id.btnBackHistory);
         btnBack.setOnClickListener(v -> {
-            // come back to Home
             if (getActivity() != null) {
                 BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation);
                 if (bottomNav != null) {
-                    bottomNav.setSelectedItemId(R.id.nav_playlists); // Home'a git
+                    bottomNav.setSelectedItemId(R.id.nav_playlists);
                 }
             }
         });
 
-        // 1. call the Presenter
         presenter = new HistoryPresenter(this);
-
-        // 2. call the Presenter's method
         presenter.loadHistory();
 
         return view;

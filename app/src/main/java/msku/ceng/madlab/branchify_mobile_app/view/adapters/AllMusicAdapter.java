@@ -9,8 +9,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.HashSet;
 import java.util.List;
@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 import msku.ceng.madlab.branchify_mobile_app.model.data.FirestoreManager;
+import msku.ceng.madlab.branchify_mobile_app.view.activities.MainActivity;
 
 public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHolder> {
 
@@ -66,8 +67,13 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
         holder.textArtist.setText(song.getArtist());
         holder.textDuration.setText(formatDuration(song.getDuration()));
 
-        // Set icon and color based on favorite status
         updateHeartIcon(holder, song, false);
+        
+        holder.itemView.setOnClickListener(v -> {
+            if (v.getContext() instanceof MainActivity) {
+                ((MainActivity) v.getContext()).playSong(song);
+            }
+        });
 
         holder.iconHeart.setOnClickListener(v -> {
             boolean isCurrentlyFavorite = favoriteSongTitles.contains(song.getTitle());
@@ -75,10 +81,12 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
                 firestoreManager.removeFavorite(song);
                 favoriteSongTitles.remove(song.getTitle());
                 updateHeartIcon(holder, song, false);
+                Toast.makeText(v.getContext(), song.getTitle() + " removed from favorites", Toast.LENGTH_SHORT).show();
             } else {
                 firestoreManager.addFavorite(song);
                 favoriteSongTitles.add(song.getTitle());
-                updateHeartIcon(holder, song, true); // Animate when adding
+                updateHeartIcon(holder, song, true);
+                Toast.makeText(v.getContext(), song.getTitle() + " added to favorites", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -93,7 +101,6 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
             }
         } else {
             holder.iconHeart.setImageResource(R.drawable.ic_heart_outline);
-            // Set tint to a neutral grey color
             holder.iconHeart.setImageTintList(ColorStateList.valueOf(Color.parseColor("#808080")));
         }
     }
