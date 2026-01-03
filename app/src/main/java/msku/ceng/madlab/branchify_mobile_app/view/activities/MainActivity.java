@@ -3,22 +3,27 @@ package msku.ceng.madlab.branchify_mobile_app.view.activities;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
@@ -39,10 +44,13 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener mAuthListener;
 
     // UI for Now Playing Bar
-    private View nowPlayingBar; // Changed to View to be more generic
-    private TextView textNowPlayingTitle;
+    private View nowPlayingBar;
+    private TextView textNowPlayingTitle, textCurrentTime, textTotalDuration;
     private ImageButton buttonPlayPause;
+    private SeekBar seekBar;
     private MusicPlayerManager musicPlayerManager;
+    private Handler handler;
+    private Runnable progressUpdater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,12 +59,15 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         bottomNavigationView = findViewById(R.id.bottom_navigation);
+        musicPlayerManager = MusicPlayerManager.getInstance();
+        handler = new Handler(Looper.getMainLooper());
         
-        // Correctly find the included layout and its children
         nowPlayingBar = findViewById(R.id.now_playing_bar_include);
         textNowPlayingTitle = nowPlayingBar.findViewById(R.id.textNowPlayingTitle);
+        textCurrentTime = nowPlayingBar.findViewById(R.id.textCurrentTime);
+        textTotalDuration = nowPlayingBar.findViewById(R.id.textTotalDuration);
         buttonPlayPause = nowPlayingBar.findViewById(R.id.buttonPlayPause);
-        musicPlayerManager = MusicPlayerManager.getInstance();
+        seekBar = nowPlayingBar.findViewById(R.id.seekBar);
 
         mAuthListener = firebaseAuth -> {
             FirebaseUser user = firebaseAuth.getCurrentUser();
@@ -78,13 +89,72 @@ public class MainActivity extends AppCompatActivity {
                 buttonPlayPause.setImageResource(R.drawable.ic_pause);
             }
         });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    musicPlayerManager.seekTo(progress);
+                }
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                stopProgressUpdater();
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                startProgressUpdater();
+            }
+        });
     }
     
     public void playSong(Song song) {
         musicPlayerManager.play(this, song);
-        textNowPlayingTitle.setText(song.getTitle());
         nowPlayingBar.setVisibility(View.VISIBLE);
+        updateUIForNewSong(song);
+    }
+
+    private void updateUIForNewSong(Song song) {
+        textNowPlayingTitle.setText(song.getTitle());
         buttonPlayPause.setImageResource(R.drawable.ic_pause);
+        
+        handler.postDelayed(() -> {
+            int duration = musicPlayerManager.getDuration();
+            if(duration > 0){
+                seekBar.setMax(duration);
+                textTotalDuration.setText(formatDuration(duration));
+                startProgressUpdater();
+            }
+        }, 100);
+    }
+    
+    private void startProgressUpdater() {
+        if (progressUpdater == null) {
+            progressUpdater = new Runnable() {
+                @Override
+                public void run() {
+                    if (musicPlayerManager != null && musicPlayerManager.isPlaying()) {
+                        int currentPosition = musicPlayerManager.getCurrentPosition();
+                        seekBar.setProgress(currentPosition);
+                        textCurrentTime.setText(formatDuration(currentPosition));
+                    }
+                    handler.postDelayed(this, 1000);
+                }
+            };
+        }
+        handler.post(progressUpdater);
+    }
+
+    private void stopProgressUpdater() {
+        if (progressUpdater != null) {
+            handler.removeCallbacks(progressUpdater);
+        }
+    }
+
+    private String formatDuration(long millis) {
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60;
+        return String.format(Locale.getDefault(), "%d:%02d", minutes, seconds);
     }
 
     private void setupApp() {
@@ -173,5 +243,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         musicPlayerManager.release();
+        stopProgressUpdater();
     }
 }
