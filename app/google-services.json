@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "104123903496",
+    "project_id": "branchify-music-app",
+    "storage_bucket": "branchify-music-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104123903496:android:545093ad1190c5e148ebbd",
+        "android_client_info": {
+          "package_name": "msku.ceng.madlab.branchify_mobile_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCja3x_C2tPgJ-RlgMCzrx_18Csi2EkLQY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

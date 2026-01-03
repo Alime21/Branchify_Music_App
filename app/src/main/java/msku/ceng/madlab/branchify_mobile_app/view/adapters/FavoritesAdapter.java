@@ -1,25 +1,40 @@
 package msku.ceng.madlab.branchify_mobile_app.view.adapters;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
+import msku.ceng.madlab.branchify_mobile_app.model.data.FirestoreManager;
 
 public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.ViewHolder> {
 
-    private List<Song> favoritesList;
+    private final List<Song> favoritesList;
+    private final Set<String> favoriteSongTitles = new HashSet<>();
+    private final FirestoreManager firestoreManager;
 
     public FavoritesAdapter(List<Song> favoritesList) {
         this.favoritesList = favoritesList;
+        this.firestoreManager = new FirestoreManager();
+        // Initially, all songs in this adapter are considered favorites.
+        for (Song song : favoritesList) {
+            favoriteSongTitles.add(song.getTitle());
+        }
     }
 
     @NonNull
@@ -36,6 +51,37 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         holder.textTitle.setText(song.getTitle());
         holder.textArtist.setText(song.getArtist());
         holder.textDuration.setText(formatDuration(song.getDuration()));
+
+        updateHeartIcon(holder, song, false);
+
+        holder.iconHeart.setOnClickListener(v -> {
+            boolean isCurrentlyFavorite = favoriteSongTitles.contains(song.getTitle());
+            if (isCurrentlyFavorite) {
+                // It was a favorite, so remove it
+                firestoreManager.removeFavorite(song);
+                favoriteSongTitles.remove(song.getTitle());
+                updateHeartIcon(holder, song, false);
+            } else {
+                // It was not a favorite (in this session), so add it back
+                firestoreManager.addFavorite(song);
+                favoriteSongTitles.add(song.getTitle());
+                updateHeartIcon(holder, song, true); // Animate when re-favoriting
+            }
+        });
+    }
+
+    private void updateHeartIcon(@NonNull ViewHolder holder, Song song, boolean animate) {
+        if (favoriteSongTitles.contains(song.getTitle())) {
+            holder.iconHeart.setImageResource(R.drawable.ic_heart_filled);
+            holder.iconHeart.setImageTintList(ColorStateList.valueOf(Color.parseColor("#3F51B5")));
+            if (animate) {
+                Animation fillAnimation = AnimationUtils.loadAnimation(holder.itemView.getContext(), R.anim.heart_fill_anim);
+                holder.iconHeart.startAnimation(fillAnimation);
+            }
+        } else {
+            holder.iconHeart.setImageResource(R.drawable.ic_heart_outline);
+            holder.iconHeart.setImageTintList(ColorStateList.valueOf(Color.parseColor("#808080")));
+        }
     }
 
     @Override
@@ -50,7 +96,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
             long seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60;
             return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
         } catch (NumberFormatException e) {
-            return durationStr; // fallback to original string if parsing fails
+            return "00:00";
         }
     }
 

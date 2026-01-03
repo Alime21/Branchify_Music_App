@@ -19,6 +19,7 @@ import java.util.List;
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 import msku.ceng.madlab.branchify_mobile_app.model.data.ContentResolverHelper;
+import msku.ceng.madlab.branchify_mobile_app.model.data.FirebaseManager;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.AllMusicFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.FavoritesFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.HistoryFragment;
@@ -35,12 +36,9 @@ public class MainActivity extends AppCompatActivity {
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
                     Log.d(TAG, "READ_MEDIA_AUDIO permission granted.");
-                    // Permission is granted. You can now fetch the audio files.
                     loadAudioFiles();
                 } else {
                     Log.d(TAG, "READ_MEDIA_AUDIO permission denied.");
-                    // Explain to the user that the feature is unavailable because the
-                    // features requires a permission that the user has denied.
                     Toast.makeText(this, "Permission denied. Cannot load audio files.", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -48,18 +46,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main); // XML containing BottomNav and FrameLayout
+        setContentView(R.layout.activity_main);
+
+        // Authenticate the user with Firebase
+        FirebaseManager firebaseManager = new FirebaseManager();
+        firebaseManager.signInAnonymously();
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        // 1.HomeFragment (Playlists) will appear by default when the app is first opened
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new HomeFragment())
                     .commit();
         }
 
-        // 2. Code that determines what happens when a submenu is clicked
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
@@ -78,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new SettingsFragment();
             }
 
-            // If a valid fragment is selected, load it onto the screen
             if (selectedFragment != null) {
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, selectedFragment)
