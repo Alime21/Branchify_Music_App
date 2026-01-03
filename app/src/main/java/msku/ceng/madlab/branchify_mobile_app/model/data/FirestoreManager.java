@@ -21,17 +21,17 @@ public class FirestoreManager {
 
     private String getCurrentUserId() {
         FirebaseUser user = mAuth.getCurrentUser();
-        return (user != null) ? user.getUid() : null;
+        if (user == null) {
+            Log.e(TAG, "FATAL: Cannot get user ID, no user is signed in!");
+            return null;
+        }
+        return user.getUid();
     }
 
     // --- Callbacks for asynchronous operations ---
     public interface OnFavoritesCompleteListener {
         void onComplete(List<Song> favoriteSongs);
         void onError(Exception e);
-    }
-
-    public interface OnFavoriteCheckListener {
-        void onResult(boolean isFavorite);
     }
 
     // --- Public Methods ---
@@ -43,12 +43,12 @@ public class FirestoreManager {
             return;
         }
 
-        // Use the song's title as the document ID for simplicity
+        Log.d(TAG, "Attempting to add favorite for user: " + userId);
         db.collection("users").document(userId)
           .collection("favorites").document(song.getTitle())
-          .set(song) // set() creates or overwrites the document
-          .addOnSuccessListener(aVoid -> Log.d(TAG, "Favorite added: " + song.getTitle()))
-          .addOnFailureListener(e -> Log.e(TAG, "Error adding favorite", e));
+          .set(song)
+          .addOnSuccessListener(aVoid -> Log.d(TAG, "SUCCESS: Favorite added to Firestore: " + song.getTitle()))
+          .addOnFailureListener(e -> Log.e(TAG, "ERROR: Failed to add favorite to Firestore.", e));
     }
 
     public void removeFavorite(Song song) {
@@ -57,12 +57,13 @@ public class FirestoreManager {
             Log.w(TAG, "Cannot remove favorite: User not logged in or song is invalid.");
             return;
         }
-
+        
+        Log.d(TAG, "Attempting to remove favorite for user: " + userId);
         db.collection("users").document(userId)
           .collection("favorites").document(song.getTitle())
           .delete()
-          .addOnSuccessListener(aVoid -> Log.d(TAG, "Favorite removed: " + song.getTitle()))
-          .addOnFailureListener(e -> Log.e(TAG, "Error removing favorite", e));
+          .addOnSuccessListener(aVoid -> Log.d(TAG, "SUCCESS: Favorite removed from Firestore: " + song.getTitle()))
+          .addOnFailureListener(e -> Log.e(TAG, "ERROR: Failed to remove favorite from Firestore.", e));
     }
 
     public void getFavorites(OnFavoritesCompleteListener listener) {

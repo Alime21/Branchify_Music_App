@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -13,13 +14,14 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
 
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 import msku.ceng.madlab.branchify_mobile_app.model.data.ContentResolverHelper;
-import msku.ceng.madlab.branchify_mobile_app.model.data.FirebaseManager;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.AllMusicFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.FavoritesFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.HistoryFragment;
@@ -30,31 +32,37 @@ import msku.ceng.madlab.branchify_mobile_app.view.fragments.TreeFragment;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    BottomNavigationView bottomNavigationView;
-
-    private final ActivityResultLauncher<String> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    Log.d(TAG, "READ_MEDIA_AUDIO permission granted.");
-                    loadAudioFiles();
-                } else {
-                    Log.d(TAG, "READ_MEDIA_AUDIO permission denied.");
-                    Toast.makeText(this, "Permission denied. Cannot load audio files.", Toast.LENGTH_SHORT).show();
-                }
-            });
+    private BottomNavigationView bottomNavigationView;
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Authenticate the user with Firebase
-        FirebaseManager firebaseManager = new FirebaseManager();
-        firebaseManager.signInAnonymously();
-
+        mAuth = FirebaseAuth.getInstance();
         bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        if (savedInstanceState == null) {
+        mAuthListener = firebaseAuth -> {
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+            if (user != null) {
+                // User is signed in, setup the app
+                Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                setupApp();
+            } else {
+                // User is signed out, attempt to sign in anonymously
+                Log.d(TAG, "onAuthStateChanged:signed_out");
+                signInAnonymously();
+            }
+        };
+    }
+
+    private void setupApp() {
+        // Make the navigation visible and set it up
+        bottomNavigationView.setVisibility(View.VISIBLE);
+
+        if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new HomeFragment())
                     .commit();
@@ -86,19 +94,53 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.READ_MEDIA_AUDIO) ==
-                PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "READ_MEDIA_AUDIO permission already granted.");
+        // Now that the user is authenticated, we can check for permissions
+        checkPermissionsAndLoadFiles();
+    }
+
+    private void signInAnonymously() {
+        mAuth.signInAnonymously().addOnCompleteListener(this, task -> {
+            if (!task.isSuccessful()) {
+                Log.w(TAG, "signInAnonymously:failure", task.getException());
+                Toast.makeText(MainActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void checkPermissionsAndLoadFiles() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             loadAudioFiles();
         } else {
-            Log.d(TAG, "READ_MEDIA_AUDIO permission not granted. Requesting permission.");
             requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO);
         }
     }
 
     private void loadAudioFiles() {
-        ContentResolverHelper contentResolverHelper = new ContentResolverHelper(this);
-        List<Song> audioFiles = contentResolverHelper.getAudioFiles();
+        // This method now only exists to trigger the initial scan.
+        // The data isn't passed directly anymore.
+        new ContentResolverHelper(this).getAudioFiles();
+    }
+    
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    loadAudioFiles();
+                } else {
+                    Toast.makeText(this, "Permission denied. Cannot load audio files.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
     }
 }
