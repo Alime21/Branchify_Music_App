@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
+import msku.ceng.madlab.branchify_mobile_app.model.data.FirestoreManager;
 
 public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
 
@@ -17,6 +18,8 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
     private static MusicPlayerManager instance;
     private MediaPlayer mediaPlayer;
     private Context context;
+    private FirestoreManager firestoreManager;
+
 
     private List<Song> songQueue = Collections.emptyList();
     private int currentSongIndex = -1;
@@ -27,6 +30,7 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
     private MusicPlayerManager() {
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(this);
+        firestoreManager = new FirestoreManager();
     }
 
     public static synchronized MusicPlayerManager getInstance() {
@@ -80,6 +84,7 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
             mediaPlayer.setOnPreparedListener(mp -> {
                 mp.start();
                 Log.d(TAG, "Playing: " + songToPlay.getTitle());
+                firestoreManager.addSongToHistory(songToPlay);
                 for (PlayerListener listener : playerListeners) {
                     listener.onStateChanged(PlaybackState.PLAYING);
                     listener.onTrackChanged(songToPlay);
