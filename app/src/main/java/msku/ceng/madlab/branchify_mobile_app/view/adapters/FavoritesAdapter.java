@@ -12,29 +12,35 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 import msku.ceng.madlab.branchify_mobile_app.model.data.FirestoreManager;
-import msku.ceng.madlab.branchify_mobile_app.view.activities.MainActivity;
 
 public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.ViewHolder> {
 
     private final List<Song> favoritesList;
-    private final Set<String> favoriteSongTitles = new HashSet<>();
     private final FirestoreManager firestoreManager;
+    private final OnFavoriteRemovedListener removeListener;
+    private final OnItemClickListener clickListener;
 
-    public FavoritesAdapter(List<Song> favoritesList) {
+
+    public interface OnFavoriteRemovedListener {
+        void onFavoriteRemoved(int position);
+    }
+    public interface OnItemClickListener {
+        void onItemClick(int position);
+    }
+
+
+    public FavoritesAdapter(List<Song> favoritesList, OnFavoriteRemovedListener removeListener, OnItemClickListener clickListener) {
         this.favoritesList = favoritesList;
         this.firestoreManager = new FirestoreManager();
-        for (Song song : favoritesList) {
-            favoriteSongTitles.add(song.getTitle());
-        }
+        this.removeListener = removeListener;
+        this.clickListener = clickListener;
     }
 
     @NonNull
@@ -52,30 +58,18 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
         holder.textArtist.setText(song.getArtist());
         holder.textDuration.setText(formatDuration(song.getDuration()));
 
-        updateHeartIcon(holder, song, false);
+        updateHeartIcon(holder, true, false);
 
-        holder.itemView.setOnClickListener(v -> {
-            if (v.getContext() instanceof MainActivity) {
-                ((MainActivity) v.getContext()).playSong(favoritesList, holder.getAdapterPosition());
-            }
-        });
+        holder.itemView.setOnClickListener(v -> clickListener.onItemClick(holder.getAdapterPosition()));
 
         holder.iconHeart.setOnClickListener(v -> {
-            boolean isCurrentlyFavorite = favoriteSongTitles.contains(song.getTitle());
-            if (isCurrentlyFavorite) {
-                firestoreManager.removeFavorite(song);
-                favoriteSongTitles.remove(song.getTitle());
-                updateHeartIcon(holder, song, false);
-            } else {
-                firestoreManager.addFavorite(song);
-                favoriteSongTitles.add(song.getTitle());
-                updateHeartIcon(holder, song, true);
-            }
+            firestoreManager.removeFavorite(song);
+            removeListener.onFavoriteRemoved(holder.getAdapterPosition());
         });
     }
 
-    private void updateHeartIcon(@NonNull ViewHolder holder, Song song, boolean animate) {
-        if (favoriteSongTitles.contains(song.getTitle())) {
+    private void updateHeartIcon(@NonNull ViewHolder holder, boolean isFavorite, boolean animate) {
+        if (isFavorite) {
             holder.iconHeart.setImageResource(R.drawable.ic_heart_filled);
             holder.iconHeart.setImageTintList(ColorStateList.valueOf(Color.parseColor("#3F51B5")));
             if (animate) {

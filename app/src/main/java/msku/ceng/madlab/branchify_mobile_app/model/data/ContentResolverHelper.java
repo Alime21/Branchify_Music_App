@@ -18,12 +18,18 @@ public class ContentResolverHelper {
 
     private final Context mContext;
     private static final String TAG = "ContentResolverHelper";
+    private static List<Song> allMusicCache;
+
 
     public ContentResolverHelper(Context context) {
         mContext = context;
     }
 
     public List<Song> getAudioFiles() {
+        if (allMusicCache != null) {
+            return allMusicCache;
+        }
+
         List<Song> audioFiles = new ArrayList<>();
         ContentResolver contentResolver = mContext.getContentResolver();
         
@@ -76,6 +82,12 @@ public class ContentResolverHelper {
         } catch (Exception e) {
             Log.e(TAG, "Error querying for audio files.", e);
         }
+        allMusicCache = audioFiles;
         return audioFiles;
     }
+
+    public static List<Song> getAllMusicCache() {
+        return allMusicCache;
+    }
+
 }
