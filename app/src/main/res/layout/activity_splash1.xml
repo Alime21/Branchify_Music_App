@@ -18,8 +18,8 @@
 
     <ImageView
         android:id="@+id/albumIcon"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
         android:src="@drawable/album"
         android:color="#4c4c4c"
         android:contentDescription="Müzik albüm simgesi"
@@ -31,15 +31,15 @@
 
     <TextView
         android:id="@+id/newText"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Create your personal playlists"
         android:textSize="18sp"
         android:textColor="#4c4c4c"
         android:fontFamily="@font/rubik_mono_one"
         android:gravity="center"
-        android:layout_marginTop="8dp"
-
+        android:layout_marginTop="4dp"
+        app:layout_constraintWidth_percent="0.7"
         app:layout_constraintTop_toBottomOf="@id/albumIcon"
         app:layout_constraintBottom_toTopOf="@id/tabLayout"
         app:layout_constraintStart_toStartOf="parent"
@@ -57,12 +57,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+
 
     </com.google.android.material.tabs.TabLayout>
 
