@@ -2,31 +2,31 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_playlists"
-        android:icon="@drawable/ic_launcher_foreground"
+        android:icon="@drawable/home_menu"
         android:title="Playlists" />
 
     <item
         android:id="@+id/nav_all_music"
-        android:icon="@drawable/ic_launcher_foreground"
+        android:icon="@drawable/musics_menu"
         android:title="Musics" />
 
     <item
         android:id="@+id/nav_favorites"
-        android:icon="@drawable/ic_launcher_foreground"
+        android:icon="@drawable/favorite_menu"
         android:title="Favorites" />
 
     <item
         android:id="@+id/nav_tree"
-        android:icon="@drawable/ic_launcher_foreground"
+        android:icon="@drawable/tree_menu"
         android:title="Tree" />
 
     <item
         android:id="@+id/nav_history"
-        android:icon="@drawable/ic_launcher_foreground"
+        android:icon="@drawable/history_menu"
         android:title="History" />
 
     <item
         android:id="@+id/nav_settings"
-        android:icon="@drawable/ic_launcher_foreground"
+        android:icon="@drawable/settings"
         android:title="Settings" />
 </menu>
