@@ -60,7 +60,7 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
             return;
         }
 
-        this.songQueue = queue;
+        this.songQueue = new ArrayList<>(queue);
         this.currentSongIndex = index;
         Song songToPlay = songQueue.get(currentSongIndex);
 
@@ -139,6 +139,13 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
         }
         return null;
     }
+    public List<Song> getSongQueue() {
+        return songQueue;
+    }
+    public int getCurrentSongIndex() {
+        return currentSongIndex;
+    }
+    
     public PlaybackState getCurrentState() {
         return mediaPlayer.isPlaying() ? PlaybackState.PLAYING : PlaybackState.PAUSED;
     }

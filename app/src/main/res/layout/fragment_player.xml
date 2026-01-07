@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#C8D6AF"
+    android:background="@color/app_background"
     android:clickable="true"
     android:focusable="true"
     tools:context=".view.fragments.PlayerFragment">
@@ -15,10 +15,11 @@
         android:layout_height="32dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:src="@drawable/ic_arrow_down"
         android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_arrow_down"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/text_dark" />
 
     <ImageView
         android:id="@+id/imageAlbumArt"
@@ -27,7 +28,6 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="32dp"
-        android:background="#A0B090"
         android:src="@drawable/ic_music_note"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
@@ -43,14 +43,14 @@
         android:layout_marginEnd="32dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:text="Song Title"
         android:textAlignment="center"
-        android:textColor="#2C3E50"
+        android:textColor="@color/text_dark"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageAlbumArt" />
+        app:layout_constraintTop_toBottomOf="@+id/imageAlbumArt"
+        tools:text="Song Title" />
 
     <TextView
         android:id="@+id/textArtistName"
@@ -61,13 +61,13 @@
         android:layout_marginEnd="32dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:text="Artist Name"
         android:textAlignment="center"
-        android:textColor="#555555"
+        android:textColor="@color/text_dark"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textSongTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/textSongTitle"
+        tools:text="Artist Name" />
 
     <SeekBar
         android:id="@+id/playerSeekBar"
@@ -76,6 +76,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="32dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textArtistName" />
@@ -84,54 +85,69 @@
         android:id="@+id/playerTextCurrentTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0:00"
-        android:textColor="#555555"
+        android:textColor="@color/text_dark"
         android:textSize="12sp"
         app:layout_constraintStart_toStartOf="@+id/playerSeekBar"
-        app:layout_constraintTop_toBottomOf="@+id/playerSeekBar" />
+        app:layout_constraintTop_toBottomOf="@+id/playerSeekBar"
+        tools:text="0:00" />
 
     <TextView
         android:id="@+id/playerTextTotalDuration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0:00"
-        android:textColor="#555555"
+        android:textColor="@color/text_dark"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="@+id/playerSeekBar"
-        app:layout_constraintTop_toBottomOf="@+id/playerSeekBar" />
+        app:layout_constraintTop_toBottomOf="@+id/playerSeekBar"
+        tools:text="0:00" />
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ImageButton
+        android:id="@+id/playerButtonPlayPause"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         android:layout_marginTop="32dp"
-        android:gravity="center"
-        android:orientation="horizontal"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_pause"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/playerSeekBar">
+        app:layout_constraintTop_toBottomOf="@+id/playerSeekBar"
+        app:tint="@color/text_dark" />
 
-        <ImageButton
-            android:id="@+id/buttonPrevious"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginEnd="16dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_previous" />
+    <ImageButton
+        android:id="@+id/buttonPrevious"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_previous"
+        app:layout_constraintBottom_toBottomOf="@+id/playerButtonPlayPause"
+        app:layout_constraintEnd_toStartOf="@+id/playerButtonPlayPause"
+        app:layout_constraintTop_toTopOf="@+id/playerButtonPlayPause"
+        app:tint="@color/text_dark" />
 
-        <ImageButton
-            android:id="@+id/playerButtonPlayPause"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_pause" />
+    <ImageButton
+        android:id="@+id/buttonNext"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_next"
+        app:layout_constraintBottom_toBottomOf="@+id/playerButtonPlayPause"
+        app:layout_constraintStart_toEndOf="@+id/playerButtonPlayPause"
+        app:layout_constraintTop_toTopOf="@+id/playerButtonPlayPause"
+        app:tint="@color/text_dark" />
 
-        <ImageButton
-            android:id="@+id/buttonNext"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginStart="16dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_next" />
-    </LinearLayout>
+    <ImageButton
+        android:id="@+id/buttonQueue"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_queue_music"
+        app:layout_constraintEnd_toEndOf="@+id/buttonPrevious"
+        app:layout_constraintStart_toStartOf="@+id/buttonPrevious"
+        app:layout_constraintTop_toBottomOf="@+id/buttonPrevious"
+        app:tint="@color/text_dark" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

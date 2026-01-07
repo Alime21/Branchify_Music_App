@@ -13,6 +13,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
 import com.bumptech.glide.Glide;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +27,7 @@ public class PlayerFragment extends Fragment {
     private ImageView buttonClose, imageAlbumArt;
     private TextView textSongTitle, textArtistName, textCurrentTime, textTotalDuration;
     private SeekBar playerSeekBar;
-    private ImageButton buttonPrevious, buttonPlayPause, buttonNext;
+    private ImageButton buttonPrevious, buttonPlayPause, buttonNext, buttonQueue;
 
     private MusicPlayerManager musicPlayerManager;
     private Handler handler;
@@ -60,6 +62,7 @@ public class PlayerFragment extends Fragment {
         buttonPrevious = view.findViewById(R.id.buttonPrevious);
         buttonPlayPause = view.findViewById(R.id.playerButtonPlayPause);
         buttonNext = view.findViewById(R.id.buttonNext);
+        buttonQueue = view.findViewById(R.id.buttonQueue);
     }
 
     private void setupClickListeners() {
@@ -73,6 +76,15 @@ public class PlayerFragment extends Fragment {
         });
         buttonNext.setOnClickListener(v -> musicPlayerManager.next());
         buttonPrevious.setOnClickListener(v -> musicPlayerManager.previous());
+        buttonQueue.setOnClickListener(v -> openQueueFragment());
+    }
+    
+    private void openQueueFragment() {
+        getParentFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.slide_in_up, R.anim.fade_out, R.anim.fade_in, R.anim.slide_out_down)
+                .replace(android.R.id.content, new QueueFragment())
+                .addToBackStack(null)
+                .commit();
     }
 
     private void setupSeekBar() {
