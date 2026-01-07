@@ -2,6 +2,7 @@ package msku.ceng.madlab.branchify_mobile_app.view.activities;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         musicPlayerManager = MusicPlayerManager.getInstance();
         handler = new Handler(Looper.getMainLooper());
-        
+
         nowPlayingBar = findViewById(R.id.now_playing_bar_include);
         textNowPlayingTitle = nowPlayingBar.findViewById(R.id.textNowPlayingTitle);
         textCurrentTime = nowPlayingBar.findViewById(R.id.textCurrentTime);
@@ -106,15 +107,25 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) { startProgressUpdater(); }
         });
-        
+
         setupMusicPlayerListener();
+        requestNotificationPermission();
     }
-    
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
+    }
+
+
     public void playSong(List<Song> songQueue, int index) {
         musicPlayerManager.play(this, songQueue, index);
         nowPlayingBar.setVisibility(View.VISIBLE);
     }
-    
+
     public void setNowPlayingBarVisibility(int visibility) {
         nowPlayingBar.setVisibility(visibility);
     }
@@ -145,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateUIForNewSong(Song song) {
         textNowPlayingTitle.setText(song.getTitle());
         buttonPlayPause.setImageResource(R.drawable.ic_pause);
-        
+
         handler.postDelayed(() -> {
             int duration = musicPlayerManager.getDuration();
             if(duration > 0){
@@ -157,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }, 100);
     }
-    
+
     private void startProgressUpdater() {
         stopProgressUpdater(); // Stop any existing updater
         if (progressUpdater == null) {
@@ -234,13 +245,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
                     loadAudioFiles();
                 } else {
-                    Toast.makeText(this, "Permission denied. Cannot load audio files.", Toast.LENGTH_SHORT).show();
+                    // This could be for either READ_MEDIA_AUDIO or POST_NOTIFICATIONS
+                    // You might want to distinguish them if you need different logic.
                 }
             });
 

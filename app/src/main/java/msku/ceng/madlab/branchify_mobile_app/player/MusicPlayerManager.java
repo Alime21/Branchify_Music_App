@@ -2,10 +2,12 @@ package msku.ceng.madlab.branchify_mobile_app.player;
 
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
+import androidx.core.content.ContextCompat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,11 +22,9 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
     private Context context;
     private FirestoreManager firestoreManager;
 
-
     private List<Song> songQueue = Collections.emptyList();
     private int currentSongIndex = -1;
 
-    // Listeners to notify UI of changes
     private final List<PlayerListener> playerListeners = new ArrayList<>();
 
     private MusicPlayerManager() {
@@ -49,14 +49,6 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
     public void removePlayerListener(PlayerListener listener) {
         playerListeners.remove(listener);
     }
-    
-    public void setPlayerListener(PlayerListener listener) {
-        // This is now deprecated, but we can keep it for backward compatibility or refactor to remove it.
-        // For now, it just adds a single listener, clearing others.
-        playerListeners.clear();
-        playerListeners.add(listener);
-    }
-
 
     public void play(Context context, List<Song> queue, int index) {
         this.context = context.getApplicationContext();
@@ -74,10 +66,7 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
             }
             mediaPlayer.reset();
 
-            Uri trackUri = ContentUris.withAppendedId(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                songToPlay.getId()
-            );
+            Uri trackUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songToPlay.getId());
 
             mediaPlayer.setDataSource(context, trackUri);
             mediaPlayer.prepareAsync();
@@ -85,6 +74,7 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
                 mp.start();
                 Log.d(TAG, "Playing: " + songToPlay.getTitle());
                 firestoreManager.addSongToHistory(songToPlay);
+                startServiceWithNotification(songToPlay, true);
                 for (PlayerListener listener : playerListeners) {
                     listener.onStateChanged(PlaybackState.PLAYING);
                     listener.onTrackChanged(songToPlay);
@@ -113,6 +103,7 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
     public void pause() {
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
+            startServiceWithNotification(getCurrentSong(), false);
             for (PlayerListener listener : playerListeners) {
                 listener.onStateChanged(PlaybackState.PAUSED);
             }
@@ -122,10 +113,18 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
     public void resume() {
         if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
+            startServiceWithNotification(getCurrentSong(), true);
             for (PlayerListener listener : playerListeners) {
                 listener.onStateChanged(PlaybackState.PLAYING);
             }
         }
+    }
+
+    private void startServiceWithNotification(Song song, boolean isPlaying) {
+        Intent serviceIntent = new Intent(context, MusicService.class);
+        serviceIntent.putExtra("song", song.getTitle()); // Pass song data
+        serviceIntent.putExtra("isPlaying", isPlaying);
+        ContextCompat.startForegroundService(context, serviceIntent);
     }
 
     @Override
@@ -133,7 +132,6 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
         next();
     }
 
-    // --- Getters and Setters ---
     public void seekTo(int position) { mediaPlayer.seekTo(position); }
     public int getCurrentPosition() { return mediaPlayer.isPlaying() ? mediaPlayer.getCurrentPosition() : 0; }
     public int getDuration() { return mediaPlayer.getDuration(); }
@@ -144,29 +142,22 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
         }
         return null;
     }
-    public List<Song> getSongQueue() {
-        return songQueue;
-    }
-    public int getCurrentSongIndex() {
-        return currentSongIndex;
-    }
-    
-    public PlaybackState getCurrentState() {
-        return mediaPlayer.isPlaying() ? PlaybackState.PLAYING : PlaybackState.PAUSED;
-    }
-
+    public List<Song> getSongQueue() { return songQueue; }
+    public int getCurrentSongIndex() { return currentSongIndex; }
+    public PlaybackState getCurrentState() { return mediaPlayer.isPlaying() ? PlaybackState.PLAYING : PlaybackState.PAUSED; }
 
     public void release() {
         if (mediaPlayer != null) {
             mediaPlayer.release();
             mediaPlayer = null;
         }
+        if (context != null) {
+            context.stopService(new Intent(context, MusicService.class));
+        }
         instance = null;
     }
 
-    // --- Listener Interface and Enum ---
     public enum PlaybackState { PLAYING, PAUSED }
-
     public interface PlayerListener {
         void onStateChanged(PlaybackState state);
         void onTrackChanged(Song newSong);
