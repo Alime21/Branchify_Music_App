@@ -17,11 +17,13 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +35,7 @@ import msku.ceng.madlab.branchify_mobile_app.view.fragments.AllMusicFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.FavoritesFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.HistoryFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.HomeFragment;
+import msku.ceng.madlab.branchify_mobile_app.view.fragments.PlayerFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.SettingsFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.TreeFragment;
 
@@ -43,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
-    // UI for Now Playing Bar
     private View nowPlayingBar;
     private TextView textNowPlayingTitle, textCurrentTime, textTotalDuration;
     private ImageButton buttonPlayPause;
@@ -51,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private MusicPlayerManager musicPlayerManager;
     private Handler handler;
     private Runnable progressUpdater;
+    private MusicPlayerManager.PlayerListener playerListener;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,13 +84,13 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        nowPlayingBar.setOnClickListener(v -> openPlayerFragment());
+
         buttonPlayPause.setOnClickListener(v -> {
             if (musicPlayerManager.isPlaying()) {
                 musicPlayerManager.pause();
-                buttonPlayPause.setImageResource(R.drawable.ic_play);
             } else {
                 musicPlayerManager.resume();
-                buttonPlayPause.setImageResource(R.drawable.ic_pause);
             }
         });
 
@@ -98,20 +102,44 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                stopProgressUpdater();
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) { stopProgressUpdater(); }
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                startProgressUpdater();
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) { startProgressUpdater(); }
         });
+        
+        setupMusicPlayerListener();
     }
     
-    public void playSong(Song song) {
-        musicPlayerManager.play(this, song);
+    public void playSong(List<Song> songQueue, int index) {
+        musicPlayerManager.play(this, songQueue, index);
         nowPlayingBar.setVisibility(View.VISIBLE);
-        updateUIForNewSong(song);
+    }
+    
+    public void setNowPlayingBarVisibility(int visibility) {
+        nowPlayingBar.setVisibility(visibility);
+    }
+
+    private void openPlayerFragment() {
+        PlayerFragment playerFragment = new PlayerFragment();
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.setCustomAnimations(R.anim.slide_in_up, R.anim.fade_out, R.anim.fade_in, R.anim.slide_out_down);
+        transaction.add(android.R.id.content, playerFragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    private void setupMusicPlayerListener() {
+        playerListener = new MusicPlayerManager.PlayerListener() {
+            @Override
+            public void onStateChanged(MusicPlayerManager.PlaybackState state) {
+                buttonPlayPause.setImageResource(state == MusicPlayerManager.PlaybackState.PLAYING ? R.drawable.ic_pause : R.drawable.ic_play);
+            }
+
+            @Override
+            public void onTrackChanged(Song newSong) {
+                updateUIForNewSong(newSong);
+            }
+        };
     }
 
     private void updateUIForNewSong(Song song) {
@@ -124,11 +152,14 @@ public class MainActivity extends AppCompatActivity {
                 seekBar.setMax(duration);
                 textTotalDuration.setText(formatDuration(duration));
                 startProgressUpdater();
+            } else {
+                handler.postDelayed(() -> updateUIForNewSong(song), 200);
             }
         }, 100);
     }
     
     private void startProgressUpdater() {
+        stopProgressUpdater(); // Stop any existing updater
         if (progressUpdater == null) {
             progressUpdater = new Runnable() {
                 @Override
@@ -204,6 +235,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
     
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    loadAudioFiles();
+                } else {
+                    Toast.makeText(this, "Permission denied. Cannot load audio files.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
     private void checkPermissionsAndLoadFiles() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             loadAudioFiles();
@@ -215,20 +255,13 @@ public class MainActivity extends AppCompatActivity {
     private void loadAudioFiles() {
         new ContentResolverHelper(this).getAudioFiles();
     }
-    
-    private final ActivityResultLauncher<String> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    loadAudioFiles();
-                } else {
-                    Toast.makeText(this, "Permission denied. Cannot load audio files.", Toast.LENGTH_SHORT).show();
-                }
-            });
 
     @Override
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
+        musicPlayerManager.addPlayerListener(playerListener);
+
     }
 
     @Override
@@ -237,6 +270,8 @@ public class MainActivity extends AppCompatActivity {
         if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
         }
+        musicPlayerManager.removePlayerListener(playerListener);
+
     }
 
     @Override

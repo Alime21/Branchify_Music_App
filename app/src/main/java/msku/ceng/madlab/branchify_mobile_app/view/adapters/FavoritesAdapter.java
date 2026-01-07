@@ -56,7 +56,7 @@ public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.View
 
         holder.itemView.setOnClickListener(v -> {
             if (v.getContext() instanceof MainActivity) {
-                ((MainActivity) v.getContext()).playSong(song);
+                ((MainActivity) v.getContext()).playSong(favoritesList, holder.getAdapterPosition());
             }
         });
 

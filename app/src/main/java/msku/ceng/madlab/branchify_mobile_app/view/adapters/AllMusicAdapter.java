@@ -71,7 +71,7 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
         
         holder.itemView.setOnClickListener(v -> {
             if (v.getContext() instanceof MainActivity) {
-                ((MainActivity) v.getContext()).playSong(song);
+                ((MainActivity) v.getContext()).playSong(allMusicList, holder.getAdapterPosition());
             }
         });
 

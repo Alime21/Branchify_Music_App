@@ -2,6 +2,7 @@
 package msku.ceng.madlab.branchify_mobile_app.model.data;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -37,15 +38,11 @@ public class ContentResolverHelper {
                 MediaStore.Audio.Media._ID,
                 MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.ALBUM,
+                MediaStore.Audio.Media.ALBUM_ID,
                 MediaStore.Audio.Media.DURATION,
-                MediaStore.Audio.Media.DATA
         };
 
-        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0" + " OR " +
-                MediaStore.Audio.Media.IS_ALARM + "!= 0" + " OR " +
-                MediaStore.Audio.Media.IS_NOTIFICATION + "!= 0" + " OR " +
-                MediaStore.Audio.Media.IS_RINGTONE + "!= 0";
+        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
 
 
         try (Cursor cursor = contentResolver.query(uri, projection, selection, null, null)) {
@@ -58,20 +55,19 @@ public class ContentResolverHelper {
                 int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID);
                 int titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE);
                 int artistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST);
-                int albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM);
+                int albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID);
                 int durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION);
-                int dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
 
                 do {
                     long id = cursor.getLong(idColumn);
                     String title = cursor.getString(titleColumn);
                     String artist = cursor.getString(artistColumn);
-                    String album = cursor.getString(albumColumn);
+                    long albumId = cursor.getLong(albumIdColumn);
                     long duration = cursor.getLong(durationColumn);
-                    String data = cursor.getString(dataColumn);
 
-                    // Create a Song object and add it to the list
-                    audioFiles.add(new Song(id, title, artist, String.valueOf(duration)));
+                    Uri albumArtUri = ContentUris.withAppendedId(Uri.parse("content://media/external/audio/albumart"), albumId);
+
+                    audioFiles.add(new Song(id, title, artist, String.valueOf(duration), albumArtUri.toString()));
                 } while (cursor.moveToNext());
             } else {
                 Log.d(TAG, "Cursor is empty. No audio files found.");

@@ -4,26 +4,29 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.SeekBar;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 
-public class MusicPlayerManager {
+public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
 
     private static final String TAG = "MusicPlayerManager";
     private static MusicPlayerManager instance;
     private MediaPlayer mediaPlayer;
-    private Song currentSong;
-    private Handler handler;
-    private Runnable progressUpdater;
+    private Context context;
+
+    private List<Song> songQueue = Collections.emptyList();
+    private int currentSongIndex = -1;
+
+    // Listeners to notify UI of changes
+    private final List<PlayerListener> playerListeners = new ArrayList<>();
 
     private MusicPlayerManager() {
         mediaPlayer = new MediaPlayer();
-        handler = new Handler(Looper.getMainLooper());
+        mediaPlayer.setOnCompletionListener(this);
     }
 
     public static synchronized MusicPlayerManager getInstance() {
@@ -33,94 +36,127 @@ public class MusicPlayerManager {
         return instance;
     }
 
-    public void play(Context context, Song song) {
-        if (song == null) return;
+    public void addPlayerListener(PlayerListener listener) {
+        if (!playerListeners.contains(listener)) {
+            playerListeners.add(listener);
+        }
+    }
+
+    public void removePlayerListener(PlayerListener listener) {
+        playerListeners.remove(listener);
+    }
+    
+    public void setPlayerListener(PlayerListener listener) {
+        // This is now deprecated, but we can keep it for backward compatibility or refactor to remove it.
+        // For now, it just adds a single listener, clearing others.
+        playerListeners.clear();
+        playerListeners.add(listener);
+    }
+
+
+    public void play(Context context, List<Song> queue, int index) {
+        this.context = context.getApplicationContext();
+        if (queue == null || queue.isEmpty() || index < 0 || index >= queue.size()) {
+            return;
+        }
+
+        this.songQueue = queue;
+        this.currentSongIndex = index;
+        Song songToPlay = songQueue.get(currentSongIndex);
 
         try {
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.stop();
             }
             mediaPlayer.reset();
-            
+
             Uri trackUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                song.getId()
+                songToPlay.getId()
             );
 
             mediaPlayer.setDataSource(context, trackUri);
             mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(mp -> {
                 mp.start();
-                currentSong = song;
-                Log.d(TAG, "Playing: " + song.getTitle());
+                Log.d(TAG, "Playing: " + songToPlay.getTitle());
+                for (PlayerListener listener : playerListeners) {
+                    listener.onStateChanged(PlaybackState.PLAYING);
+                    listener.onTrackChanged(songToPlay);
+                }
             });
-            
+
         } catch (Exception e) {
             Log.e(TAG, "Error playing song", e);
+        }
+    }
+
+    public void next() {
+        if (context != null && !songQueue.isEmpty()) {
+            currentSongIndex = (currentSongIndex + 1) % songQueue.size();
+            play(context, songQueue, currentSongIndex);
+        }
+    }
+
+    public void previous() {
+        if (context != null && !songQueue.isEmpty()) {
+            currentSongIndex = (currentSongIndex - 1 + songQueue.size()) % songQueue.size();
+            play(context, songQueue, currentSongIndex);
         }
     }
 
     public void pause() {
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
+            for (PlayerListener listener : playerListeners) {
+                listener.onStateChanged(PlaybackState.PAUSED);
+            }
         }
     }
 
     public void resume() {
         if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
+            for (PlayerListener listener : playerListeners) {
+                listener.onStateChanged(PlaybackState.PLAYING);
+            }
         }
     }
 
-    public void seekTo(int position) {
-        if (mediaPlayer != null) {
-            mediaPlayer.seekTo(position);
-        }
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        next();
     }
 
-    public int getCurrentPosition() {
-        return mediaPlayer.isPlaying() ? mediaPlayer.getCurrentPosition() : 0;
-    }
-
-    public int getDuration() {
-        return mediaPlayer.isPlaying() ? mediaPlayer.getDuration() : 0;
-    }
-    
-    public void startProgressUpdater(final SeekBar seekBar) {
-        if (progressUpdater == null) {
-            progressUpdater = new Runnable() {
-                @Override
-                public void run() {
-                    if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                        seekBar.setProgress(mediaPlayer.getCurrentPosition());
-                    }
-                    handler.postDelayed(this, 1000); // Update every second
-                }
-            };
-        }
-        handler.post(progressUpdater);
-    }
-    
-    public void stopProgressUpdater() {
-        if (progressUpdater != null) {
-            handler.removeCallbacks(progressUpdater);
-        }
-    }
-
-    public boolean isPlaying() {
-        return mediaPlayer.isPlaying();
-    }
-
+    // --- Getters and Setters ---
+    public void seekTo(int position) { mediaPlayer.seekTo(position); }
+    public int getCurrentPosition() { return mediaPlayer.isPlaying() ? mediaPlayer.getCurrentPosition() : 0; }
+    public int getDuration() { return mediaPlayer.getDuration(); }
+    public boolean isPlaying() { return mediaPlayer.isPlaying(); }
     public Song getCurrentSong() {
-        return currentSong;
+        if (currentSongIndex != -1 && currentSongIndex < songQueue.size()) {
+            return songQueue.get(currentSongIndex);
+        }
+        return null;
     }
+    public PlaybackState getCurrentState() {
+        return mediaPlayer.isPlaying() ? PlaybackState.PLAYING : PlaybackState.PAUSED;
+    }
+
 
     public void release() {
         if (mediaPlayer != null) {
             mediaPlayer.release();
             mediaPlayer = null;
         }
-        stopProgressUpdater();
         instance = null;
+    }
+
+    // --- Listener Interface and Enum ---
+    public enum PlaybackState { PLAYING, PAUSED }
+
+    public interface PlayerListener {
+        void onStateChanged(PlaybackState state);
+        void onTrackChanged(Song newSong);
     }
 }
