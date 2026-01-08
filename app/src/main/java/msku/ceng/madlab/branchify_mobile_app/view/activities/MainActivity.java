@@ -237,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
             if (selectedFragment != null) {
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, selectedFragment)
+                        .addToBackStack(null)
                         .commit();
             }
             return true;

@@ -25,6 +25,8 @@
         <activity
             android:name=".view.activities.Splash1Activity"
             android:exported="false" />
+        <activity android:name=".view.activities.FavoritesActivity"
+                  android:exported="false"/>
         <activity
             android:name=".view.activities.WelcomeActivity"
             android:exported="true">

@@ -48,6 +48,10 @@ public class FavoritesFragment extends Fragment implements FavoritesContract.Vie
         btnBack.setOnClickListener(v -> {
             if (getParentFragmentManager().getBackStackEntryCount() > 0) {
                 getParentFragmentManager().popBackStack();
+            }else {
+                if (getActivity() != null) {
+                    getActivity().onBackPressed();
+                }
             }
         });
 
