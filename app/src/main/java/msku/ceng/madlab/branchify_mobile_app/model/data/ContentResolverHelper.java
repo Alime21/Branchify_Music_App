@@ -7,11 +7,16 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 
 public class ContentResolverHelper {
@@ -19,17 +24,73 @@ public class ContentResolverHelper {
     private final Context mContext;
     private static final String TAG = "ContentResolverHelper";
     private static List<Song> allMusicCache;
+    
+    // Threading components for async operations
+    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static final Handler mainHandler = new Handler(Looper.getMainLooper());
 
+    /**
+     * Callback interface for async music loading
+     */
+    public interface OnMusicLoadedListener {
+        void onMusicLoaded(List<Song> songs);
+        void onError(Exception e);
+    }
 
     public ContentResolverHelper(Context context) {
         mContext = context;
     }
 
+    /**
+     * Asynchronously loads audio files from the device.
+     * The callback will be invoked on the main thread.
+     * 
+     * @param listener Callback to receive the loaded songs
+     */
+    public void getAudioFilesAsync(OnMusicLoadedListener listener) {
+        // Return cached data immediately if available
+        if (allMusicCache != null) {
+            Log.d(TAG, "Returning cached music on thread: " + Thread.currentThread().getName());
+            listener.onMusicLoaded(allMusicCache);
+            return;
+        }
+
+        // Load from device on background thread
+        executor.execute(() -> {
+            Log.d(TAG, "Loading audio files on background thread: " + Thread.currentThread().getName());
+            try {
+                List<Song> songs = loadAudioFilesFromDevice();
+                
+                // Post result back to main thread
+                mainHandler.post(() -> {
+                    Log.d(TAG, "Delivering results on main thread: " + Thread.currentThread().getName());
+                    listener.onMusicLoaded(songs);
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "Error loading audio files asynchronously", e);
+                mainHandler.post(() -> listener.onError(e));
+            }
+        });
+    }
+
+    /**
+     * Synchronous method to get audio files (blocking).
+     * Consider using getAudioFilesAsync for better UX.
+     */
     public List<Song> getAudioFiles() {
         if (allMusicCache != null) {
             return allMusicCache;
         }
+        return loadAudioFilesFromDevice();
+    }
 
+    /**
+     * Internal method that performs the actual loading from MediaStore.
+     * This should be called from a background thread.
+     */
+    private List<Song> loadAudioFilesFromDevice() {
+        Log.d(TAG, "Loading from device on thread: " + Thread.currentThread().getName());
+        
         List<Song> audioFiles = new ArrayList<>();
         ContentResolver contentResolver = mContext.getContentResolver();
         

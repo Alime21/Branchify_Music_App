@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -34,6 +35,7 @@ public class AllMusicFragment extends Fragment implements AllMusicContract.View,
     private RecyclerView recyclerView;
     private AllMusicAdapter adapter;
     private List<Playlist> userPlaylists = new ArrayList<>();
+    private LinearLayout loadingContainer;
 
     @Nullable
     @Override
@@ -42,6 +44,7 @@ public class AllMusicFragment extends Fragment implements AllMusicContract.View,
 
         recyclerView = view.findViewById(R.id.recyclerAllMusic);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        loadingContainer = view.findViewById(R.id.loadingContainer);
 
         ImageView btnBack = view.findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> {
@@ -94,14 +97,31 @@ public class AllMusicFragment extends Fragment implements AllMusicContract.View,
 
     @Override
     public void showLoading() {
+        if (loadingContainer != null) {
+            loadingContainer.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        }
     }
 
     @Override
     public void hideLoading() {
+        if (loadingContainer != null) {
+            loadingContainer.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
     public void showError(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Clean up presenter resources to prevent memory leaks
+        if (allMusicPresenter != null) {
+            allMusicPresenter.cleanup();
+        }
     }
 }

@@ -5,8 +5,11 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +42,8 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Playlist;
@@ -63,6 +68,11 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerSearchResults;
     private SearchResultsAdapter searchResultsAdapter;
     private List<Song> allSongs = new ArrayList<>();
+
+    // Threading components for search
+    private final ExecutorService searchExecutor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static final String TAG = "HomeFragment";
 
     @Nullable
     @Override
@@ -504,25 +514,41 @@ public class HomeFragment extends Fragment {
             loadAllSongs();
         }
 
-        String lowerQuery = query.toLowerCase();
-        List<Song> filteredSongs = new ArrayList<>();
+        // Run filtering on a background thread to avoid blocking the UI
+        searchExecutor.execute(() -> {
+            Log.d(TAG, "Search thread started: " + Thread.currentThread().getName());
+            
+            String lowerQuery = query.toLowerCase();
+            List<Song> filteredSongs = new ArrayList<>();
 
-        for (Song song : allSongs) {
-            String title = song.getTitle() != null ? song.getTitle().toLowerCase() : "";
-            String artist = song.getArtist() != null ? song.getArtist().toLowerCase() : "";
+            // Perform filtering on background thread
+            for (Song song : allSongs) {
+                String title = song.getTitle() != null ? song.getTitle().toLowerCase() : "";
+                String artist = song.getArtist() != null ? song.getArtist().toLowerCase() : "";
 
-            if (title.contains(lowerQuery) || artist.contains(lowerQuery)) {
-                filteredSongs.add(song);
+                if (title.contains(lowerQuery) || artist.contains(lowerQuery)) {
+                    filteredSongs.add(song);
+                }
             }
-        }
 
-        if (filteredSongs.isEmpty()) {
-            recyclerSearchResults.setVisibility(View.VISIBLE);
-            searchResultsAdapter.clearResults();
-        } else {
-            recyclerSearchResults.setVisibility(View.VISIBLE);
-            searchResultsAdapter.updateResults(filteredSongs);
-        }
+            Log.d(TAG, "Filtering complete. Found " + filteredSongs.size() + " results");
+
+            // Post results back to the main UI thread
+            final List<Song> results = filteredSongs;
+            mainHandler.post(() -> {
+                Log.d(TAG, "Updating UI on thread: " + Thread.currentThread().getName());
+                
+                if (getContext() == null) return; // Fragment may be detached
+                
+                if (results.isEmpty()) {
+                    recyclerSearchResults.setVisibility(View.VISIBLE);
+                    searchResultsAdapter.clearResults();
+                } else {
+                    recyclerSearchResults.setVisibility(View.VISIBLE);
+                    searchResultsAdapter.updateResults(results);
+                }
+            });
+        });
     }
 
     private void hideSearchResults() {
@@ -539,5 +565,15 @@ public class HomeFragment extends Fragment {
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Shutdown the executor to prevent memory leaks
+        if (searchExecutor != null && !searchExecutor.isShutdown()) {
+            searchExecutor.shutdown();
+            Log.d(TAG, "Search executor shutdown");
+        }
     }
 }
