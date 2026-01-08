@@ -4,41 +4,58 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+import android.view.Gravity; // Gerekli
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import androidx.fragment.app.Fragment; // Eksik olabilir
 
 import msku.ceng.madlab.branchify_mobile_app.R;
+import msku.ceng.madlab.branchify_mobile_app.presenter.TreePresenter;
 
-public class TreeFragment extends Fragment {
+public class TreeFragment extends Fragment { // Class başlangıcı şart
+
+    private TreePresenter presenter;
+    private LinearLayout genreContainer;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tree, container, false);
 
-        // example: pop node
-        TextView nodePop = view.findViewById(R.id.nodePop);
-        nodePop.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Opening Pop Genre...", Toast.LENGTH_SHORT).show();
-            // buraya playlist açma kodu gelecek
-        });
+        presenter = new TreePresenter();
+        // XML'e eklediğin popSubContainer'ı burada bağlıyoruz
+        genreContainer = view.findViewById(R.id.popSubContainer);
 
-        // example: jazz button
-        TextView nodeJazz = view.findViewById(R.id.nodeJazz);
-        nodeJazz.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Opening Jazz Genre...", Toast.LENGTH_SHORT).show();
-        });
-
-        // Add Button
-        TextView btnAdd = view.findViewById(R.id.btnAddPop);
+        View btnAdd = view.findViewById(R.id.btnAddPop);
         btnAdd.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Add new sub-genre logic", Toast.LENGTH_SHORT).show();
+            addNewGenreNode("new genre");
         });
 
         return view;
+    }
+
+    private void addNewGenreNode(String genreName) {
+        if (getContext() == null) return;
+
+        presenter.addGenre(genreName);
+
+        TextView newBadge = new TextView(getContext());
+        newBadge.setText(genreName);
+        newBadge.setGravity(Gravity.CENTER);
+
+        newBadge.setBackgroundResource(R.drawable.bg_tree_node);
+        newBadge.setPadding(20, 10, 20, 10);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 10, 0, 10);
+        newBadge.setLayoutParams(params);
+
+        genreContainer.addView(newBadge);
     }
 }

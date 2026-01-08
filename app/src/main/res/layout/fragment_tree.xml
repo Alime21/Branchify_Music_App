@@ -143,6 +143,15 @@
                 app:layout_constraintEnd_toStartOf="@id/btnAddPop"
                 app:layout_constraintTop_toTopOf="@id/nodePop"
                 app:layout_constraintBottom_toBottomOf="@id/nodePop"/>
+            //!!!
+            <LinearLayout
+                android:id="@+id/popSubContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="20dp"
+                app:layout_constraintStart_toEndOf="@id/btnAddPop"
+                app:layout_constraintTop_toTopOf="@id/nodePop" />
 
 
             <TextView
