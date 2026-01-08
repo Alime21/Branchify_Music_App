@@ -151,4 +151,12 @@ public class ContentResolverHelper {
         return allMusicCache;
     }
 
+    /**
+     * Clears the music cache. Call this when permission is granted
+     * to force a reload of music files.
+     */
+    public static void clearCache() {
+        allMusicCache = null;
+    }
+
 }

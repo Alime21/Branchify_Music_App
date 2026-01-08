@@ -112,12 +112,13 @@ public class MainActivity extends AppCompatActivity {
 
         setupMusicPlayerListener();
         requestNotificationPermission();
+        checkPermissionsAndLoadFiles();
     }
 
     private void requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
             }
         }
     }
@@ -256,18 +257,43 @@ public class MainActivity extends AppCompatActivity {
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
+                    Log.d(TAG, "Audio permission granted");
+                    // Clear cache to force reload now that we have permission
+                    ContentResolverHelper.clearCache();
                     loadAudioFiles();
+                    // Refresh the current fragment to show music
+                    recreate();
                 } else {
-                    // This could be for either READ_MEDIA_AUDIO or POST_NOTIFICATIONS
-                    // You might want to distinguish them if you need different logic.
+                    Log.w(TAG, "Audio permission denied");
+                    Toast.makeText(this, "Permission denied. Cannot load music files.", Toast.LENGTH_LONG).show();
+                }
+            });
+
+    private final ActivityResultLauncher<String> notificationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    Log.d(TAG, "Notification permission granted");
+                } else {
+                    Log.w(TAG, "Notification permission denied");
                 }
             });
 
     private void checkPermissionsAndLoadFiles() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+        String permission;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ uses READ_MEDIA_AUDIO
+            permission = Manifest.permission.READ_MEDIA_AUDIO;
+        } else {
+            // Android 12 and below uses READ_EXTERNAL_STORAGE
+            permission = Manifest.permission.READ_EXTERNAL_STORAGE;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Permission already granted, loading audio files");
             loadAudioFiles();
         } else {
-            requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO);
+            Log.d(TAG, "Requesting permission: " + permission);
+            requestPermissionLauncher.launch(permission);
         }
     }
 
