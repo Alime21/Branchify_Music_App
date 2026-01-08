@@ -7,6 +7,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
@@ -39,14 +40,31 @@ public class FirestoreManager {
         void onComplete(List<Song> favoriteSongs);
         void onError(Exception e);
     }
-    
+
     public interface OnHistoryCompleteListener {
         void onComplete(List<Song> historySongs);
         void onError(Exception e);
     }
+    
+    public interface OnTaskCompleteListener {
+        void onSuccess();
+        void onFailure(Exception e);
+    }
 
 
     // --- Public Methods ---
+
+    public void addSongToGlobalCollection(Song song, OnTaskCompleteListener listener) {
+        if (song == null) {
+            listener.onFailure(new IllegalArgumentException("Song cannot be null."));
+            return;
+        }
+        String documentId = String.valueOf(song.getId());
+        db.collection("songs").document(documentId)
+                .set(song, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> listener.onSuccess())
+                .addOnFailureListener(listener::onFailure);
+    }
 
     public void addFavorite(Song song) {
         String userId = getCurrentUserId();
@@ -57,10 +75,10 @@ public class FirestoreManager {
 
         Log.d(TAG, "Attempting to add favorite for user: " + userId);
         db.collection("users").document(userId)
-          .collection("favorites").document(song.getTitle())
-          .set(song)
-          .addOnSuccessListener(aVoid -> Log.d(TAG, "SUCCESS: Favorite added to Firestore: " + song.getTitle()))
-          .addOnFailureListener(e -> Log.e(TAG, "ERROR: Failed to add favorite to Firestore.", e));
+                .collection("favorites").document(song.getTitle())
+                .set(song)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "SUCCESS: Favorite added to Firestore: " + song.getTitle()))
+                .addOnFailureListener(e -> Log.e(TAG, "ERROR: Failed to add favorite to Firestore.", e));
     }
 
     public void removeFavorite(Song song) {
@@ -69,13 +87,13 @@ public class FirestoreManager {
             Log.w(TAG, "Cannot remove favorite: User not logged in or song is invalid.");
             return;
         }
-        
+
         Log.d(TAG, "Attempting to remove favorite for user: " + userId);
         db.collection("users").document(userId)
-          .collection("favorites").document(song.getTitle())
-          .delete()
-          .addOnSuccessListener(aVoid -> Log.d(TAG, "SUCCESS: Favorite removed from Firestore: " + song.getTitle()))
-          .addOnFailureListener(e -> Log.e(TAG, "ERROR: Failed to remove favorite from Firestore.", e));
+                .collection("favorites").document(song.getTitle())
+                .delete()
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "SUCCESS: Favorite removed from Firestore: " + song.getTitle()))
+                .addOnFailureListener(e -> Log.e(TAG, "ERROR: Failed to remove favorite from Firestore.", e));
     }
 
     public void getFavorites(OnFavoritesCompleteListener listener) {
@@ -86,50 +104,50 @@ public class FirestoreManager {
         }
 
         db.collection("users").document(userId)
-          .collection("favorites")
-          .get()
-          .addOnSuccessListener(queryDocumentSnapshots -> {
-              List<Song> favoritesList = new ArrayList<>();
-              if (queryDocumentSnapshots != null) {
-                  favoritesList = queryDocumentSnapshots.toObjects(Song.class);
-              }
-              listener.onComplete(favoritesList);
-          })
-          .addOnFailureListener(listener::onError);
+                .collection("favorites")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Song> favoritesList = new ArrayList<>();
+                    if (queryDocumentSnapshots != null) {
+                        favoritesList = queryDocumentSnapshots.toObjects(Song.class);
+                    }
+                    listener.onComplete(favoritesList);
+                })
+                .addOnFailureListener(listener::onError);
     }
-    
+
     public void addSongToHistory(Song song) {
         String userId = getCurrentUserId();
         if (userId == null || song == null || song.getTitle() == null) {
             Log.w(TAG, "Cannot add to history: User not logged in or song is invalid.");
             return;
         }
-    
+
         CollectionReference historyRef = db.collection("users").document(userId).collection("history");
-    
+
         // Check if the song already exists in the history
         historyRef
-            .whereEqualTo("title", song.getTitle())
-            .whereEqualTo("artist", song.getArtist())
-            .get()
-            .addOnSuccessListener(queryDocumentSnapshots -> {
-                WriteBatch batch = db.batch();
-    
-                // Delete existing entries
-                for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
-                    batch.delete(doc.getReference());
-                }
-    
-                // Add the new entry
-                batch.set(historyRef.document(), song);
-    
-                batch.commit()
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d(TAG, "SUCCESS: Song added/updated in history.");
-                        trimHistory(userId);
-                    })
-                    .addOnFailureListener(e -> Log.e(TAG, "ERROR: Failed to update history.", e));
-            });
+                .whereEqualTo("title", song.getTitle())
+                .whereEqualTo("artist", song.getArtist())
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    WriteBatch batch = db.batch();
+
+                    // Delete existing entries
+                    for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                        batch.delete(doc.getReference());
+                    }
+
+                    // Add the new entry
+                    batch.set(historyRef.document(), song);
+
+                    batch.commit()
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d(TAG, "SUCCESS: Song added/updated in history.");
+                                trimHistory(userId);
+                            })
+                            .addOnFailureListener(e -> Log.e(TAG, "ERROR: Failed to update history.", e));
+                });
     }
 
     private void trimHistory(String userId) {
@@ -159,17 +177,17 @@ public class FirestoreManager {
         }
 
         db.collection("users").document(userId)
-          .collection("history")
-          .orderBy("timestamp", Query.Direction.DESCENDING)
-          .limit(HISTORY_LIMIT)
-          .get()
-          .addOnSuccessListener(queryDocumentSnapshots -> {
-              List<Song> historyList = new ArrayList<>();
-              if (queryDocumentSnapshots != null) {
-                  historyList = queryDocumentSnapshots.toObjects(Song.class);
-              }
-              listener.onComplete(historyList);
-          })
-          .addOnFailureListener(listener::onError);
+                .collection("history")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(HISTORY_LIMIT)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Song> historyList = new ArrayList<>();
+                    if (queryDocumentSnapshots != null) {
+                        historyList = queryDocumentSnapshots.toObjects(Song.class);
+                    }
+                    listener.onComplete(historyList);
+                })
+                .addOnFailureListener(listener::onError);
     }
 }

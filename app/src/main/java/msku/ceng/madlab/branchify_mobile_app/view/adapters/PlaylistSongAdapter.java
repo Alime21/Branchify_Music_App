@@ -12,36 +12,38 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 import msku.ceng.madlab.branchify_mobile_app.model.data.FirestoreManager;
 import msku.ceng.madlab.branchify_mobile_app.player.MusicPlayerManager;
-import msku.ceng.madlab.branchify_mobile_app.view.activities.MainActivity;
 
-public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHolder> {
+public class PlaylistSongAdapter extends RecyclerView.Adapter<PlaylistSongAdapter.ViewHolder> {
 
-    private final List<Song> allMusicList;
+    private final List<Song> songList;
     private final Set<String> favoriteSongTitles = new HashSet<>();
     private final FirestoreManager firestoreManager;
-    private final OnSongLongClickListener longClickListener;
+    private final OnItemClickListener clickListener;
     private final MusicPlayerManager musicPlayerManager;
 
-    public interface OnSongLongClickListener {
-        boolean onSongLongClick(Song song, View view);
+    public interface OnItemClickListener {
+        void onItemClick(int position);
     }
 
-    public AllMusicAdapter(List<Song> allMusicList, OnSongLongClickListener longClickListener) {
-        this.allMusicList = allMusicList;
+    public PlaylistSongAdapter(List<Song> songList, OnItemClickListener clickListener) {
+        this.songList = songList;
         this.firestoreManager = new FirestoreManager();
-        this.longClickListener = longClickListener;
+        this.clickListener = clickListener;
         this.musicPlayerManager = MusicPlayerManager.getInstance();
         fetchInitialFavorites();
     }
@@ -58,7 +60,7 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
 
             @Override
             public void onError(Exception e) {
-                // Handle error
+                // Handle error silently
             }
         });
     }
@@ -73,7 +75,7 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Song song = allMusicList.get(position);
+        Song song = songList.get(position);
         holder.textTitle.setText(song.getTitle());
         holder.textArtist.setText(song.getArtist());
         holder.textDuration.setText(formatDuration(song.getDuration()));
@@ -81,16 +83,9 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
         updateHeartIcon(holder, song, false);
 
         holder.itemView.setOnClickListener(v -> {
-            if (v.getContext() instanceof MainActivity) {
-                ((MainActivity) v.getContext()).playSong(allMusicList, holder.getAdapterPosition());
+            if (clickListener != null) {
+                clickListener.onItemClick(holder.getAdapterPosition());
             }
-        });
-
-        holder.itemView.setOnLongClickListener(v -> {
-            if (longClickListener != null) {
-                return longClickListener.onSongLongClick(song, v);
-            }
-            return false;
         });
 
         holder.iconHeart.setOnClickListener(v -> {
@@ -127,9 +122,6 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
             } else if (itemId == R.id.action_sleep_timer) {
                 showSleepTimerDialog(view.getContext());
                 return true;
-            } else if (itemId == R.id.action_add_to_playlist) {
-                longClickListener.onSongLongClick(song, view);
-                return true;
             }
             return false;
         });
@@ -148,25 +140,23 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
             } else if (options[item].equals("30 minutes")) {
                 duration = TimeUnit.MINUTES.toMillis(30);
             } else if (options[item].equals("1 hour")) {
-                duration = TimeUnit.MINUTES.toMillis(60);
+                duration = TimeUnit.HOURS.toMillis(1);
             } else if (options[item].equals("Cancel Timer")) {
                 musicPlayerManager.cancelSleepTimer();
-                message = "Sleep timer canceled.";
-                duration = -1;
+                Toast.makeText(context, "Sleep timer cancelled", Toast.LENGTH_SHORT).show();
+                return;
             }
-
-            if(duration > 0) {
+            if (duration > 0) {
                 musicPlayerManager.setSleepTimer(duration);
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
             }
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-
         });
         builder.show();
     }
 
-
     private void updateHeartIcon(@NonNull ViewHolder holder, Song song, boolean animate) {
-        if (favoriteSongTitles.contains(song.getTitle())) {
+        boolean isFavorite = favoriteSongTitles.contains(song.getTitle());
+        if (isFavorite) {
             holder.iconHeart.setImageResource(R.drawable.ic_heart_filled);
             holder.iconHeart.setImageTintList(ColorStateList.valueOf(Color.parseColor("#3F51B5")));
             if (animate) {
@@ -179,11 +169,6 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
         }
     }
 
-    @Override
-    public int getItemCount() {
-        return allMusicList.size();
-    }
-
     private String formatDuration(String durationStr) {
         try {
             long millis = Long.parseLong(durationStr);
@@ -193,6 +178,11 @@ public class AllMusicAdapter extends RecyclerView.Adapter<AllMusicAdapter.ViewHo
         } catch (NumberFormatException e) {
             return "00:00";
         }
+    }
+
+    @Override
+    public int getItemCount() {
+        return songList.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

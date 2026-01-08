@@ -24,6 +24,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +38,7 @@ import msku.ceng.madlab.branchify_mobile_app.view.fragments.FavoritesFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.HistoryFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.HomeFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.PlayerFragment;
+import msku.ceng.madlab.branchify_mobile_app.view.fragments.PlaylistsFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.SettingsFragment;
 import msku.ceng.madlab.branchify_mobile_app.view.fragments.TreeFragment;
 
@@ -126,6 +128,11 @@ public class MainActivity extends AppCompatActivity {
         nowPlayingBar.setVisibility(View.VISIBLE);
     }
 
+    public void playShuffled(List<Song> songQueue) {
+        Collections.shuffle(songQueue);
+        playSong(songQueue, 0);
+    }
+
     public void setNowPlayingBarVisibility(int visibility) {
         nowPlayingBar.setVisibility(visibility);
     }
@@ -212,8 +219,10 @@ public class MainActivity extends AppCompatActivity {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
 
-            if (itemId == R.id.nav_playlists) {
+            if (itemId == R.id.nav_home) {
                 selectedFragment = new HomeFragment();
+            } else if (itemId == R.id.nav_playlists) {
+                selectedFragment = new PlaylistsFragment();
             } else if (itemId == R.id.nav_all_music) {
                 selectedFragment = new AllMusicFragment();
             } else if (itemId == R.id.nav_favorites) {
@@ -222,8 +231,6 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new TreeFragment();
             } else if (itemId == R.id.nav_history) {
                 selectedFragment = new HistoryFragment();
-            } else if (itemId == R.id.nav_settings) {
-                selectedFragment = new SettingsFragment();
             }
 
             if (selectedFragment != null) {

@@ -1,21 +1,37 @@
 package msku.ceng.madlab.branchify_mobile_app.view.adapters;
 
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Playlist;
+import msku.ceng.madlab.branchify_mobile_app.view.fragments.PlaylistDetailFragment;
 
 public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder> {
 
     private List<Playlist> playlistList;
 
-    public PlaylistAdapter(List<Playlist> playlistList) {
+    public interface OnPlaylistClickListener {
+        void onPlaylistClick(Playlist playlist);
+    }
+
+    private final OnPlaylistClickListener listener;
+
+    public PlaylistAdapter(List<Playlist> playlistList, OnPlaylistClickListener listener) {
         this.playlistList = playlistList;
+        this.listener = listener;
+    }
+
+    public void setPlaylists(List<Playlist> playlists) {
+        this.playlistList.clear();
+        this.playlistList.addAll(playlists);
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -31,6 +47,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         Playlist playlist = playlistList.get(position);
         holder.textName.setText(playlist.getName());
         holder.textCount.setText(playlist.getTrackCount());
+        holder.itemView.setOnClickListener(v -> listener.onPlaylistClick(playlist));
     }
 
     @Override

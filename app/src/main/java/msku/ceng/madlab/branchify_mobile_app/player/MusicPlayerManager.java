@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 import androidx.core.content.ContextCompat;
@@ -22,15 +24,19 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
     private Context context;
     private FirestoreManager firestoreManager;
 
-    private List<Song> songQueue = Collections.emptyList();
+    private List<Song> songQueue = new ArrayList<>();
     private int currentSongIndex = -1;
 
     private final List<PlayerListener> playerListeners = new ArrayList<>();
+    private Handler sleepTimerHandler;
+    private Runnable sleepTimerRunnable;
+
 
     private MusicPlayerManager() {
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(this);
         firestoreManager = new FirestoreManager();
+        sleepTimerHandler = new Handler(Looper.getMainLooper());
     }
 
     public static synchronized MusicPlayerManager getInstance() {
@@ -83,6 +89,39 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
 
         } catch (Exception e) {
             Log.e(TAG, "Error playing song", e);
+        }
+    }
+    
+    public void addToQueue(Song song) {
+        if (songQueue.isEmpty()) {
+            play(context, Collections.singletonList(song), 0);
+        } else {
+            songQueue.add(song);
+        }
+    }
+
+    public void playNext(Song song) {
+        if (songQueue.isEmpty()) {
+            play(context, Collections.singletonList(song), 0);
+        } else {
+            songQueue.add(currentSongIndex + 1, song);
+        }
+    }
+
+    public void setSleepTimer(long durationInMillis) {
+        cancelSleepTimer(); // Cancel any existing timer
+        sleepTimerRunnable = () -> {
+            if (isPlaying()) {
+                pause();
+            }
+        };
+        sleepTimerHandler.postDelayed(sleepTimerRunnable, durationInMillis);
+    }
+
+    public void cancelSleepTimer() {
+        if (sleepTimerRunnable != null) {
+            sleepTimerHandler.removeCallbacks(sleepTimerRunnable);
+            sleepTimerRunnable = null;
         }
     }
 
@@ -154,6 +193,7 @@ public class MusicPlayerManager implements MediaPlayer.OnCompletionListener {
         if (context != null) {
             context.stopService(new Intent(context, MusicService.class));
         }
+        cancelSleepTimer();
         instance = null;
     }
 

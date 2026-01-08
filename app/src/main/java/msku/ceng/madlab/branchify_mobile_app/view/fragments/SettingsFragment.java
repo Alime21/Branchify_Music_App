@@ -26,7 +26,7 @@ public class SettingsFragment extends Fragment{
                 BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation);
 
                 if (bottomNav != null) {
-                    bottomNav.setSelectedItemId(R.id.nav_playlists);
+                    bottomNav.setSelectedItemId(R.id.nav_home);
                 }
             }
         });
