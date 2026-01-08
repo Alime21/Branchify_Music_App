@@ -5,10 +5,14 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
@@ -22,6 +26,8 @@ import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
@@ -37,8 +43,10 @@ import java.util.List;
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Playlist;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
+import msku.ceng.madlab.branchify_mobile_app.model.data.ContentResolverHelper;
 import msku.ceng.madlab.branchify_mobile_app.model.data.FirestoreManager;
 import msku.ceng.madlab.branchify_mobile_app.view.activities.MainActivity;
+import msku.ceng.madlab.branchify_mobile_app.view.adapters.SearchResultsAdapter;
 
 public class HomeFragment extends Fragment {
 
@@ -48,6 +56,13 @@ public class HomeFragment extends Fragment {
     private FirebaseAuth mAuth;
     private FirestoreManager firestoreManager;
     private List<Song> recentSongs = new ArrayList<>();
+
+    // Search related fields
+    private EditText editTextSearch;
+    private ImageView btnClearSearch;
+    private RecyclerView recyclerSearchResults;
+    private SearchResultsAdapter searchResultsAdapter;
+    private List<Song> allSongs = new ArrayList<>();
 
     @Nullable
     @Override
@@ -61,9 +76,17 @@ public class HomeFragment extends Fragment {
         playlistsContainer = view.findViewById(R.id.playlistsContainer);
         recentActivityGrid = view.findViewById(R.id.recentActivityGrid);
 
+        // Initialize search components
+        editTextSearch = view.findViewById(R.id.editTextSearch);
+        btnClearSearch = view.findViewById(R.id.btnClearSearch);
+        recyclerSearchResults = view.findViewById(R.id.recyclerSearchResults);
+
+        setupSearch();
+
         // Load real data
         loadPlaylists();
         loadRecentActivity();
+        loadAllSongs();
 
         // Find View All from ID on fragment_home.xml
         TextView btnViewAll = view.findViewById(R.id.textPlaylistsViewAll);
@@ -413,6 +436,104 @@ public class HomeFragment extends Fragment {
         card.addView(textView);
 
         recentActivityGrid.addView(card);
+    }
+
+    private void setupSearch() {
+        // Setup RecyclerView for search results
+        recyclerSearchResults.setLayoutManager(new LinearLayoutManager(getContext()));
+        searchResultsAdapter = new SearchResultsAdapter((songs, position) -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).playSong(songs, position);
+                clearSearch();
+            }
+        });
+        recyclerSearchResults.setAdapter(searchResultsAdapter);
+
+        // Text watcher for search input
+        editTextSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String query = s.toString().trim();
+                if (query.isEmpty()) {
+                    hideSearchResults();
+                } else {
+                    filterSongs(query);
+                }
+                btnClearSearch.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        // Handle keyboard search action
+        editTextSearch.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                String query = editTextSearch.getText().toString().trim();
+                if (!query.isEmpty()) {
+                    filterSongs(query);
+                }
+                return true;
+            }
+            return false;
+        });
+
+        // Clear search button
+        btnClearSearch.setOnClickListener(v -> clearSearch());
+    }
+
+    private void loadAllSongs() {
+        if (getContext() == null) return;
+
+        // Try to get cached songs first
+        List<Song> cachedSongs = ContentResolverHelper.getAllMusicCache();
+        if (cachedSongs != null && !cachedSongs.isEmpty()) {
+            allSongs = new ArrayList<>(cachedSongs);
+        } else {
+            // Load from device if cache is empty
+            ContentResolverHelper contentResolverHelper = new ContentResolverHelper(getContext());
+            allSongs = new ArrayList<>(contentResolverHelper.getAudioFiles());
+        }
+    }
+
+    private void filterSongs(String query) {
+        if (allSongs.isEmpty()) {
+            loadAllSongs();
+        }
+
+        String lowerQuery = query.toLowerCase();
+        List<Song> filteredSongs = new ArrayList<>();
+
+        for (Song song : allSongs) {
+            String title = song.getTitle() != null ? song.getTitle().toLowerCase() : "";
+            String artist = song.getArtist() != null ? song.getArtist().toLowerCase() : "";
+
+            if (title.contains(lowerQuery) || artist.contains(lowerQuery)) {
+                filteredSongs.add(song);
+            }
+        }
+
+        if (filteredSongs.isEmpty()) {
+            recyclerSearchResults.setVisibility(View.VISIBLE);
+            searchResultsAdapter.clearResults();
+        } else {
+            recyclerSearchResults.setVisibility(View.VISIBLE);
+            searchResultsAdapter.updateResults(filteredSongs);
+        }
+    }
+
+    private void hideSearchResults() {
+        recyclerSearchResults.setVisibility(View.GONE);
+        searchResultsAdapter.clearResults();
+    }
+
+    private void clearSearch() {
+        editTextSearch.setText("");
+        hideSearchResults();
+        btnClearSearch.setVisibility(View.GONE);
     }
 
     private int dpToPx(int dp) {
