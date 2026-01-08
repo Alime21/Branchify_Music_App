@@ -85,14 +85,27 @@ public class PlaylistDetailPresenter implements PlaylistDetailContract.Presenter
             if (task.isSuccessful()) {
                 List<Song> songs = task.getResult().toObjects(Song.class);
                 view.showSongs(songs);
-                if (!songs.isEmpty() && songs.get(0).getAlbumArtUri() != null) {
-                    view.showPlaylistArtwork(songs.get(0).getAlbumArtUri());
+                // Find the first song with a valid album art URI to use as playlist artwork
+                String artworkUri = findFirstValidArtwork(songs);
+                if (artworkUri != null) {
+                    view.showPlaylistArtwork(artworkUri);
                 }
             } else {
                 view.showError("Failed to fetch song details.");
             }
             view.hideLoading();
         });
+    }
+
+    private String findFirstValidArtwork(List<Song> songs) {
+        if (songs == null || songs.isEmpty()) return null;
+        for (Song song : songs) {
+            String artUri = song.getAlbumArtUri();
+            if (artUri != null && !artUri.isEmpty()) {
+                return artUri;
+            }
+        }
+        return null;
     }
 
 

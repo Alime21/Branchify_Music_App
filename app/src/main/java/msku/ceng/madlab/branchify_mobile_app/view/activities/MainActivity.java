@@ -2,14 +2,13 @@ package msku.ceng.madlab.branchify_mobile_app.view.activities;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.SeekBar;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,14 +19,13 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
@@ -50,12 +48,10 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener mAuthListener;
 
     private View nowPlayingBar;
-    private TextView textNowPlayingTitle, textCurrentTime, textTotalDuration;
-    private ImageButton buttonPlayPause;
-    private SeekBar seekBar;
+    private TextView textNowPlayingTitle, textNowPlayingArtist;
+    private ImageView albumArtSmall;
+    private ImageButton buttonPlayPause, buttonPrevious, buttonNext;
     private MusicPlayerManager musicPlayerManager;
-    private Handler handler;
-    private Runnable progressUpdater;
     private MusicPlayerManager.PlayerListener playerListener;
 
 
@@ -67,14 +63,14 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         musicPlayerManager = MusicPlayerManager.getInstance();
-        handler = new Handler(Looper.getMainLooper());
 
         nowPlayingBar = findViewById(R.id.now_playing_bar_include);
         textNowPlayingTitle = nowPlayingBar.findViewById(R.id.textNowPlayingTitle);
-        textCurrentTime = nowPlayingBar.findViewById(R.id.textCurrentTime);
-        textTotalDuration = nowPlayingBar.findViewById(R.id.textTotalDuration);
+        textNowPlayingArtist = nowPlayingBar.findViewById(R.id.textNowPlayingArtist);
+        albumArtSmall = nowPlayingBar.findViewById(R.id.albumArtSmall);
         buttonPlayPause = nowPlayingBar.findViewById(R.id.buttonPlayPause);
-        seekBar = nowPlayingBar.findViewById(R.id.seekBar);
+        buttonPrevious = nowPlayingBar.findViewById(R.id.buttonPrevious);
+        buttonNext = nowPlayingBar.findViewById(R.id.buttonNext);
 
         mAuthListener = firebaseAuth -> {
             FirebaseUser user = firebaseAuth.getCurrentUser();
@@ -97,18 +93,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    musicPlayerManager.seekTo(progress);
-                }
-            }
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) { stopProgressUpdater(); }
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) { startProgressUpdater(); }
-        });
+        buttonPrevious.setOnClickListener(v -> musicPlayerManager.previous());
+
+        buttonNext.setOnClickListener(v -> musicPlayerManager.next());
 
         setupMusicPlayerListener();
         requestNotificationPermission();
@@ -163,48 +150,23 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUIForNewSong(Song song) {
         textNowPlayingTitle.setText(song.getTitle());
+        textNowPlayingArtist.setText(song.getArtist());
+        textNowPlayingTitle.setSelected(true); // Enable marquee scrolling
         buttonPlayPause.setImageResource(R.drawable.ic_pause);
 
-        handler.postDelayed(() -> {
-            int duration = musicPlayerManager.getDuration();
-            if(duration > 0){
-                seekBar.setMax(duration);
-                textTotalDuration.setText(formatDuration(duration));
-                startProgressUpdater();
-            } else {
-                handler.postDelayed(() -> updateUIForNewSong(song), 200);
-            }
-        }, 100);
-    }
-
-    private void startProgressUpdater() {
-        stopProgressUpdater(); // Stop any existing updater
-        if (progressUpdater == null) {
-            progressUpdater = new Runnable() {
-                @Override
-                public void run() {
-                    if (musicPlayerManager != null && musicPlayerManager.isPlaying()) {
-                        int currentPosition = musicPlayerManager.getCurrentPosition();
-                        seekBar.setProgress(currentPosition);
-                        textCurrentTime.setText(formatDuration(currentPosition));
-                    }
-                    handler.postDelayed(this, 1000);
-                }
-            };
+        // Load album art
+        if (song.getAlbumArtUri() != null && !song.getAlbumArtUri().isEmpty()) {
+            albumArtSmall.setPadding(0, 0, 0, 0);
+            albumArtSmall.setImageTintList(null);
+            Glide.with(this)
+                    .load(Uri.parse(song.getAlbumArtUri()))
+                    .placeholder(R.drawable.ic_music_note)
+                    .error(R.drawable.ic_music_note)
+                    .centerCrop()
+                    .into(albumArtSmall);
+        } else {
+            albumArtSmall.setImageResource(R.drawable.ic_music_note);
         }
-        handler.post(progressUpdater);
-    }
-
-    private void stopProgressUpdater() {
-        if (progressUpdater != null) {
-            handler.removeCallbacks(progressUpdater);
-        }
-    }
-
-    private String formatDuration(long millis) {
-        long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
-        long seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60;
-        return String.format(Locale.getDefault(), "%d:%02d", minutes, seconds);
     }
 
     private void setupApp() {
@@ -324,6 +286,5 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         musicPlayerManager.release();
-        stopProgressUpdater();
     }
 }

@@ -4,11 +4,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,19 +22,24 @@ import java.util.stream.Collectors;
 
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.contract.FavoritesContract;
+import msku.ceng.madlab.branchify_mobile_app.contract.PlaylistsContract;
+import msku.ceng.madlab.branchify_mobile_app.model.Playlist;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 import msku.ceng.madlab.branchify_mobile_app.model.data.ContentResolverHelper;
 import msku.ceng.madlab.branchify_mobile_app.presenter.FavoritesPresenter;
+import msku.ceng.madlab.branchify_mobile_app.presenter.PlaylistsPresenter;
 import msku.ceng.madlab.branchify_mobile_app.view.activities.MainActivity;
 import msku.ceng.madlab.branchify_mobile_app.view.adapters.FavoritesAdapter;
 
 
-public class FavoritesFragment extends Fragment implements FavoritesContract.View, FavoritesAdapter.OnFavoriteRemovedListener, FavoritesAdapter.OnItemClickListener {
+public class FavoritesFragment extends Fragment implements FavoritesContract.View, FavoritesAdapter.OnFavoriteRemovedListener, FavoritesAdapter.OnItemClickListener, FavoritesAdapter.OnSongLongClickListener, PlaylistsContract.View {
 
     private FavoritesPresenter presenter;
+    private PlaylistsPresenter playlistsPresenter;
     private RecyclerView recyclerView;
     private FavoritesAdapter adapter;
     private List<Song> favoritesList = new ArrayList<>();
+    private List<Playlist> userPlaylists = new ArrayList<>();
 
     @Nullable
     @Override
@@ -59,6 +66,10 @@ public class FavoritesFragment extends Fragment implements FavoritesContract.Vie
         presenter = new FavoritesPresenter(this, requireContext());
         presenter.loadFavorites();
 
+        playlistsPresenter = new PlaylistsPresenter();
+        playlistsPresenter.attachView(this);
+        playlistsPresenter.loadPlaylists();
+
         return view;
     }
 
@@ -68,8 +79,13 @@ public class FavoritesFragment extends Fragment implements FavoritesContract.Vie
     public void showFavoritesList(List<Song> songs) {
         favoritesList.clear();
         favoritesList.addAll(songs);
-        adapter = new FavoritesAdapter(favoritesList, this, this);
+        adapter = new FavoritesAdapter(favoritesList, this, this, this);
         recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void showPlaylists(List<Playlist> playlists) {
+        this.userPlaylists = playlists;
     }
 
     @Override
@@ -126,5 +142,29 @@ public class FavoritesFragment extends Fragment implements FavoritesContract.Vie
                 Toast.makeText(getContext(), "Could not find the clicked song in the full queue.", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    @Override
+    public boolean onSongLongClick(Song song, View view) {
+        showAddToPlaylistDialog(song);
+        return true;
+    }
+
+    private void showAddToPlaylistDialog(Song song) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Add to Playlist");
+
+        List<String> playlistNames = new ArrayList<>();
+        for (Playlist playlist : userPlaylists) {
+            playlistNames.add(playlist.getName());
+        }
+
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, playlistNames);
+        builder.setAdapter(arrayAdapter, (dialog, which) -> {
+            Playlist selectedPlaylist = userPlaylists.get(which);
+            playlistsPresenter.addSongToPlaylist(song, selectedPlaylist);
+        });
+
+        builder.show();
     }
 }

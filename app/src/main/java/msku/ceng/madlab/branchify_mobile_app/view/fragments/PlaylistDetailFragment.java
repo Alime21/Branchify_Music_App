@@ -140,10 +140,11 @@ public class PlaylistDetailFragment extends Fragment implements PlaylistDetailCo
 
     @Override
     public void showPlaylistArtwork(String artworkUri) {
-        if (getContext() != null && artworkUri != null) {
+        if (getContext() != null && artworkUri != null && !artworkUri.isEmpty()) {
             Glide.with(getContext())
                     .load(Uri.parse(artworkUri))
                     .placeholder(R.drawable.musicicon)
+                    .error(R.drawable.musicicon)
                     .into(imagePlaylistArt);
         }
     }

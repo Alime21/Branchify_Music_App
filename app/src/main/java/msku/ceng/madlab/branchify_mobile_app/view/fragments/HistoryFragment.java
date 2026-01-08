@@ -4,28 +4,36 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import msku.ceng.madlab.branchify_mobile_app.R;
 import msku.ceng.madlab.branchify_mobile_app.contract.HistoryContract;
+import msku.ceng.madlab.branchify_mobile_app.contract.PlaylistsContract;
+import msku.ceng.madlab.branchify_mobile_app.model.Playlist;
 import msku.ceng.madlab.branchify_mobile_app.model.Song;
 import msku.ceng.madlab.branchify_mobile_app.model.data.ContentResolverHelper;
 import msku.ceng.madlab.branchify_mobile_app.presenter.HistoryPresenter;
+import msku.ceng.madlab.branchify_mobile_app.presenter.PlaylistsPresenter;
 import msku.ceng.madlab.branchify_mobile_app.view.activities.MainActivity;
 import msku.ceng.madlab.branchify_mobile_app.view.adapters.HistoryAdapter;
 
-public class HistoryFragment extends Fragment implements HistoryContract.View, HistoryAdapter.OnItemClickListener {
+public class HistoryFragment extends Fragment implements HistoryContract.View, HistoryAdapter.OnItemClickListener, HistoryAdapter.OnSongLongClickListener, PlaylistsContract.View {
 
     private HistoryPresenter presenter;
+    private PlaylistsPresenter playlistsPresenter;
     private RecyclerView recyclerView;
     private List<Song> historyList;
+    private List<Playlist> userPlaylists = new ArrayList<>();
 
     @Nullable
     @Override
@@ -38,14 +46,23 @@ public class HistoryFragment extends Fragment implements HistoryContract.View, H
         presenter = new HistoryPresenter(this, requireContext());
         presenter.loadData();
 
+        playlistsPresenter = new PlaylistsPresenter();
+        playlistsPresenter.attachView(this);
+        playlistsPresenter.loadPlaylists();
+
         return view;
     }
 
     @Override
     public void showHistory(List<Song> history, List<Song> favorites) {
         this.historyList = history;
-        HistoryAdapter adapter = new HistoryAdapter(historyList, favorites, this);
+        HistoryAdapter adapter = new HistoryAdapter(historyList, favorites, this, this);
         recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void showPlaylists(List<Playlist> playlists) {
+        this.userPlaylists = playlists;
     }
 
     @Override
@@ -92,6 +109,30 @@ public class HistoryFragment extends Fragment implements HistoryContract.View, H
                 ((MainActivity) getActivity()).playSong(fullHistoryQueue, newPosition);
             }
         }
+    }
+
+    @Override
+    public boolean onSongLongClick(Song song, View view) {
+        showAddToPlaylistDialog(song);
+        return true;
+    }
+
+    private void showAddToPlaylistDialog(Song song) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Add to Playlist");
+
+        List<String> playlistNames = new ArrayList<>();
+        for (Playlist playlist : userPlaylists) {
+            playlistNames.add(playlist.getName());
+        }
+
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, playlistNames);
+        builder.setAdapter(arrayAdapter, (dialog, which) -> {
+            Playlist selectedPlaylist = userPlaylists.get(which);
+            playlistsPresenter.addSongToPlaylist(song, selectedPlaylist);
+        });
+
+        builder.show();
     }
 
     @Override
